@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Chess, Move as ChessMove } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
-import { THEME_COLORS, PIECE_COLORS } from '@/lib/constants';
+import { THEME_COLORS } from '@/lib/constants';
 
 interface ChessBoardProps {
   fen: string;
@@ -12,6 +11,14 @@ interface ChessBoardProps {
   lastMove?: { from: string; to: string };
   orientation?: 'white' | 'black';
 }
+
+const PIECE_UNICODE: Record<string, string> = {
+  'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+  'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟',
+};
+
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
 export function ChessBoard({
   fen,
@@ -29,14 +36,12 @@ export function ChessBoard({
     (square: string) => {
       if (disabled) return;
 
-      // If clicking the same square, deselect
       if (moveFrom === square) {
         setMoveFrom(null);
         setValidMoves([]);
         return;
       }
 
-      // If no piece selected, try to select one
       if (!moveFrom) {
         const piece = chess.get(square);
         if (!piece) {
@@ -45,7 +50,6 @@ export function ChessBoard({
           return;
         }
 
-        // Check if it's the right color to move
         const isWhiteToMove = chess.turn() === 'w';
         const isPieceWhite = piece.color === 'w';
 
@@ -53,7 +57,6 @@ export function ChessBoard({
           return;
         }
 
-        // Calculate legal moves from this square
         const moves = chess.moves({ square, verbose: true });
         const legalSquares = moves.map((move: ChessMove) => move.to);
 
@@ -62,7 +65,6 @@ export function ChessBoard({
         return;
       }
 
-      // If a square is selected, try to move
       if (validMoves.includes(square)) {
         const moveData = chess.moves({ square: moveFrom, verbose: true }).find(
           (move: ChessMove) => move.to === square
@@ -79,7 +81,6 @@ export function ChessBoard({
           setValidMoves([]);
         }
       } else {
-        // Select new piece if clicking on a piece of the same color
         const piece = chess.get(square);
         if (piece) {
           const isWhiteToMove = chess.turn() === 'w';
@@ -102,47 +103,45 @@ export function ChessBoard({
     [moveFrom, validMoves, fen, disabled]
   );
 
-  const highlightSquares: Record<string, React.CSSProperties> = {};
-
-  // Highlight last move
-  if (lastMove) {
-    highlightSquares[lastMove.from] = {
-      backgroundColor: THEME_COLORS.highlight,
-    };
-    highlightSquares[lastMove.to] = {
-      backgroundColor: THEME_COLORS.highlight,
-    };
-  }
-
-  // Highlight selected square
-  if (moveFrom) {
-    highlightSquares[moveFrom] = {
-      backgroundColor: THEME_COLORS.selectedSquare,
-    };
-  }
-
-  // Highlight valid move targets
-  validMoves.forEach((square) => {
-    highlightSquares[square] = {
-      backgroundColor: THEME_COLORS.selectedSquare,
-      borderRadius: '50%',
-      boxShadow: `inset 0 0 0 2px ${THEME_COLORS.accentSecondary}`,
-    };
-  });
+  const files = orientation === 'white' ? FILES : [...FILES].reverse();
+  const ranks = orientation === 'white' ? RANKS : [...RANKS].reverse();
 
   return (
     <div className="w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg border border-opacity-20 border-white">
-      <Chessboard
-        position={fen}
-        onSquareClick={handleSquareClick}
-        customBoardStyle={{
-          borderRadius: '0.5rem',
-        }}
-        customSquareStyles={highlightSquares}
-        boardOrientation={orientation}
-        arePiecesDraggable={false}
-        animationDuration={200}
-      />
+      <div className="w-full h-full grid grid-cols-8 gap-0 bg-stone-800">
+        {ranks.map((rank) =>
+          files.map((file) => {
+            const square = `${file}${rank}`;
+            const piece = chess.get(square);
+            const isLight = (FILES.indexOf(file) + RANKS.indexOf(rank)) % 2 === 0;
+            const isHighlightedMove = lastMove && (lastMove.from === square || lastMove.to === square);
+            const isSelected = moveFrom === square;
+            const isValidTarget = validMoves.includes(square);
+
+            let bgColor = isLight ? '#c8a882' : '#8b7355';
+            if (isHighlightedMove) bgColor = THEME_COLORS.highlight;
+            if (isSelected) bgColor = THEME_COLORS.selectedSquare;
+
+            return (
+              <button
+                key={square}
+                onClick={() => handleSquareClick(square)}
+                disabled={disabled}
+                className="w-full h-full flex items-center justify-center text-5xl transition-colors cursor-pointer hover:opacity-80 disabled:cursor-not-allowed"
+                style={{ backgroundColor: bgColor }}
+              >
+                {isValidTarget && (
+                  <div
+                    className="absolute w-1/3 h-1/3 rounded-full border-2"
+                    style={{ borderColor: THEME_COLORS.accentSecondary }}
+                  />
+                )}
+                {piece && <span>{PIECE_UNICODE[piece.type + (piece.color === 'w' ? '' : 'k')]}</span>}
+              </button>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

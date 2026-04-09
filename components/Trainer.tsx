@@ -5,7 +5,7 @@ import { Chess } from 'chess.js';
 import { Game, PlayerColor, TrainingMode } from '@/lib/types';
 import { ChessBoard } from './ChessBoard';
 import { TrainingPanel } from './TrainingPanel';
-import { CommentPanel } from './CommentPanel';
+import { MovesPanel } from './MovesPanel';
 import { GameList } from './GameList';
 
 interface TrainerProps {
@@ -230,23 +230,38 @@ export function Trainer({ games }: TrainerProps) {
       
       const currentMove = currentGame.moves[index - 1];
       if (currentMove) {
-        setMessage(`Navigated to move ${currentMove.san}`);
+        setMessage(`Move ${currentMove.san}`);
       }
     }
   }, [currentGame, moveIndex, trainingMode]);
+
+  // Handle arrow key navigation
+  const handleKeyboardNavigation = useCallback((direction: 'next' | 'prev') => {
+    if (trainingMode === 'train' && direction === 'next' && moveIndex >= (currentGame?.moves.length || 0)) {
+      setMessage('Game complete!');
+      return;
+    }
+
+    if (direction === 'next') {
+      handleNavigateMove(Math.min((currentGame?.moves.length || 0), moveIndex + 1));
+    } else {
+      handleNavigateMove(Math.max(0, moveIndex - 1));
+    }
+  }, [currentGame, moveIndex, trainingMode, handleNavigateMove]);
 
   const lastMove = moveIndex > 0 ? currentGame?.moves[moveIndex - 1] : undefined;
   const currentMove = getCurrentMove();
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px_280px] gap-6">
         <div className="flex flex-col gap-4">
           <div className="flex justify-center">
             {currentGame && gameState ? (
               <ChessBoard
                 fen={getCurrentFen()}
                 onMove={handleMove}
+                onNavigate={handleKeyboardNavigation}
                 disabled={moveIndex >= (currentGame?.moves.length || 0) && trainingMode === 'train'}
                 lastMove={lastMove ? { from: lastMove.from, to: lastMove.to } : undefined}
                 orientation={playerColor === 'w' ? 'white' : 'black'}
@@ -257,15 +272,6 @@ export function Trainer({ games }: TrainerProps) {
               </div>
             )}
           </div>
-
-          {/* Comment Panel */}
-          {currentGame && currentMove && (
-            <CommentPanel
-              comment={currentMove.comment}
-              moveNumber={getCurrentMoveNumber()}
-              moveSan={currentMove.san}
-            />
-          )}
 
           {currentGame && (
             <TrainingPanel
@@ -286,6 +292,21 @@ export function Trainer({ games }: TrainerProps) {
           )}
         </div>
 
+        {/* Moves and Comments Sidebar */}
+        {currentGame && (
+          <div className="flex-shrink-0">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Moves & Comments</h3>
+            <MovesPanel
+              game={currentGame}
+              moveIndex={moveIndex}
+              onNavigateMove={handleNavigateMove}
+              trainingMode={trainingMode}
+              playerColor={playerColor}
+            />
+          </div>
+        )}
+
+        {/* Games List Sidebar */}
         <div className="flex-shrink-0">
           <GameList
             games={games}

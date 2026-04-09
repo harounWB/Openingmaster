@@ -5,6 +5,7 @@ import { Chess } from 'chess.js';
 import { Game, PlayerColor, TrainingMode } from '@/lib/types';
 import { ChessBoard } from './ChessBoard';
 import { TrainingPanel } from './TrainingPanel';
+import { CommentPanel } from './CommentPanel';
 import { GameList } from './GameList';
 
 interface TrainerProps {
@@ -107,6 +108,20 @@ export function Trainer({ games }: TrainerProps) {
     return null;
   }, [currentGame, moveIndex, playerColor]);
 
+  // Get current move and its comment
+  const getCurrentMove = useCallback(() => {
+    if (!currentGame || moveIndex === 0) {
+      return null;
+    }
+    return currentGame.moves[moveIndex - 1];
+  }, [currentGame, moveIndex]);
+
+  // Get move number for display
+  const getCurrentMoveNumber = useCallback(() => {
+    if (moveIndex === 0) return 0;
+    return Math.ceil(moveIndex / 2);
+  }, [moveIndex]);
+
   const handleMove = useCallback(
     (move: { from: string; to: string; promotion?: string }) => {
       if (!currentGame) return;
@@ -191,12 +206,37 @@ export function Trainer({ games }: TrainerProps) {
 
   const handleNavigateMove = useCallback((index: number) => {
     if (currentGame && index >= 0 && index <= currentGame.moves.length) {
+      // In TRAIN mode, restrict navigation to moves already played
+      if (trainingMode === 'train' && index > moveIndex) {
+        setMessage('Complete the current move to continue');
+        return;
+      }
+      
       setMoveIndex(index);
       setIsCorrect(null);
+      
+      // Update message with new position
+      const newPos = new Chess();
+      for (let i = 0; i < index; i++) {
+        if (i < currentGame.moves.length) {
+          const move = currentGame.moves[i];
+          newPos.move({
+            from: move.from,
+            to: move.to,
+            promotion: move.promotion,
+          });
+        }
+      }
+      
+      const currentMove = currentGame.moves[index - 1];
+      if (currentMove) {
+        setMessage(`Navigated to move ${currentMove.san}`);
+      }
     }
-  }, [currentGame]);
+  }, [currentGame, moveIndex, trainingMode]);
 
   const lastMove = moveIndex > 0 ? currentGame?.moves[moveIndex - 1] : undefined;
+  const currentMove = getCurrentMove();
 
   return (
     <div className="flex flex-col gap-6">
@@ -217,6 +257,15 @@ export function Trainer({ games }: TrainerProps) {
               </div>
             )}
           </div>
+
+          {/* Comment Panel */}
+          {currentGame && currentMove && (
+            <CommentPanel
+              comment={currentMove.comment}
+              moveNumber={getCurrentMoveNumber()}
+              moveSan={currentMove.san}
+            />
+          )}
 
           {currentGame && (
             <TrainingPanel

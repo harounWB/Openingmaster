@@ -144,37 +144,39 @@ export function TrainingPanel({
           </div>
         </div>
 
-        {/* Move Navigation */}
-        <div className="space-y-1">
-          <div className="text-xs text-gray-400">Navigate:</div>
-          <div className="flex gap-2 flex-wrap">
+        {/* Move Navigation Controls */}
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Move Navigation
+          </div>
+          <div className="flex gap-2">
             <Button
               size="sm"
               onClick={() => onNavigateMove(0)}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
+              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
             >
-              Start
+              ⏮ Start
             </Button>
             <Button
               size="sm"
               onClick={() => onNavigateMove(Math.max(0, moveIndex - 1))}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
+              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
             >
-              Prev
+              ◀ Previous
             </Button>
             <Button
               size="sm"
               onClick={() => onNavigateMove(Math.min(game.moves.length, moveIndex + 1))}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
+              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
             >
-              Next
+              Next ▶
             </Button>
             <Button
               size="sm"
               onClick={() => onNavigateMove(game.moves.length)}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
+              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
             >
-              End
+              End ⏭
             </Button>
           </div>
         </div>

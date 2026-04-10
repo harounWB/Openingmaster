@@ -84,11 +84,15 @@ function parseMovesWithVariations(movesContent: string): { moves: Move[]; variat
   // Remove result at the end
   cleanContent = cleanContent.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '');
   
-  // Remove variations (text in parentheses) for simpler parsing
-  cleanContent = cleanContent.replace(/\([^)]*\)/g, '');
-  
-  // Remove comments (text in curly braces)
+  // Remove comments (text in curly braces) first
   cleanContent = cleanContent.replace(/\{[^}]*\}/g, '');
+  
+  // Remove variations (text in parentheses) - handle nested parentheses
+  let prevContent = '';
+  while (prevContent !== cleanContent) {
+    prevContent = cleanContent;
+    cleanContent = cleanContent.replace(/\([^()]*\)/g, '');
+  }
   
   // Remove NAGs like $1, $2, etc.
   cleanContent = cleanContent.replace(/\$\d+/g, '');

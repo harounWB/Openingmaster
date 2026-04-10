@@ -20,6 +20,7 @@ const PieceComponent: React.FC<{ type: string; color: 'w' | 'b' }> = ({ type, co
   const isWhite = color === 'w';
   const fill = isWhite ? '#f0d9b5' : '#312e2b';
   const stroke = isWhite ? '#1a1a1a' : '#f0d9b5';
+  const pieceType = type.toUpperCase();
 
   const pieces: Record<string, JSX.Element> = {
     'P': (
@@ -67,7 +68,7 @@ const PieceComponent: React.FC<{ type: string; color: 'w' | 'b' }> = ({ type, co
     ),
   };
 
-  return pieces[type] || null;
+  return pieces[pieceType] || null;
 };
 
 export function ChessBoard({

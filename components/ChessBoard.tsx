@@ -12,13 +12,63 @@ interface ChessBoardProps {
   orientation?: 'white' | 'black';
 }
 
-const PIECE_SYMBOLS: Record<string, string> = {
-  'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
-  'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟',
-};
-
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+// Chess.com style SVG pieces
+const PieceComponent: React.FC<{ type: string; color: 'w' | 'b' }> = ({ type, color }) => {
+  const isWhite = color === 'w';
+  const fill = isWhite ? '#f0d9b5' : '#312e2b';
+  const stroke = isWhite ? '#1a1a1a' : '#f0d9b5';
+
+  const pieces: Record<string, JSX.Element> = {
+    'P': (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <circle cx="50" cy="30" r="12" fill={fill} stroke={stroke} strokeWidth="2" />
+        <rect x="42" y="42" width="16" height="35" fill={fill} stroke={stroke} strokeWidth="2" />
+        <ellipse cx="50" cy="82" rx="18" ry="6" fill={fill} stroke={stroke} strokeWidth="2" />
+      </svg>
+    ),
+    'N': (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <path d="M 35 70 Q 25 50 30 30 Q 35 20 45 20 Q 55 20 50 35 Q 45 40 50 50 L 60 50 Q 70 50 70 65 L 70 75 Q 70 82 65 85 L 35 85 Z" fill={fill} stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
+      </svg>
+    ),
+    'B': (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <circle cx="50" cy="25" r="8" fill={fill} stroke={stroke} strokeWidth="2" />
+        <path d="M 42 35 L 38 55 Q 35 70 50 80 Q 65 70 62 55 L 58 35 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+      </svg>
+    ),
+    'R': (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <rect x="30" y="20" width="40" height="15" fill={fill} stroke={stroke} strokeWidth="2" />
+        <rect x="35" y="35" width="30" height="35" fill={fill} stroke={stroke} strokeWidth="2" />
+        <rect x="32" y="70" width="36" height="12" fill={fill} stroke={stroke} strokeWidth="2" />
+        <rect x="40" y="25" width="6" height="10" fill={fill} stroke={stroke} strokeWidth="1" />
+        <rect x="54" y="25" width="6" height="10" fill={fill} stroke={stroke} strokeWidth="1" />
+      </svg>
+    ),
+    'Q': (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <circle cx="50" cy="20" r="8" fill={fill} stroke={stroke} strokeWidth="2" />
+        <circle cx="35" cy="25" r="5" fill={fill} stroke={stroke} strokeWidth="2" />
+        <circle cx="65" cy="25" r="5" fill={fill} stroke={stroke} strokeWidth="2" />
+        <path d="M 30 35 L 25 60 Q 25 75 50 82 Q 75 75 75 60 L 70 35 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+      </svg>
+    ),
+    'K': (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <line x1="50" y1="15" x2="50" y2="30" stroke={stroke} strokeWidth="3" />
+        <line x1="45" y1="25" x2="55" y2="25" stroke={stroke} strokeWidth="2" />
+        <circle cx="50" cy="20" r="3" fill={stroke} />
+        <path d="M 35 38 L 30 65 Q 30 78 50 85 Q 70 78 70 65 L 65 38 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+      </svg>
+    ),
+  };
+
+  return pieces[type] || null;
+};
 
 export function ChessBoard({
   fen,
@@ -155,7 +205,7 @@ export function ChessBoard({
                   key={square}
                   onClick={() => onSquareClick(square)}
                   disabled={disabled}
-                  className="w-full h-full flex items-center justify-center text-5xl font-bold transition-colors cursor-pointer hover:opacity-90 disabled:cursor-not-allowed relative"
+                  className="w-full h-full flex items-center justify-center transition-colors cursor-pointer hover:opacity-90 disabled:cursor-not-allowed relative"
                   style={{ 
                     backgroundColor: bgColor,
                     aspectRatio: '1',
@@ -172,19 +222,9 @@ export function ChessBoard({
                     />
                   )}
                   {piece && (
-                    <span 
-                      className="select-none font-black leading-none"
-                      style={{ 
-                        fontSize: '42px',
-                        textShadow: piece.color === 'w' 
-                          ? '0 2px 4px rgba(0,0,0,0.4), 0 0 8px rgba(255,255,255,0.3)'
-                          : '0 2px 4px rgba(0,0,0,0.6)',
-                        color: piece.color === 'w' ? '#fafafa' : '#1a1a1a',
-                        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-                      }}
-                    >
-                      {PIECE_SYMBOLS[piece.type + (piece.color === 'w' ? '' : '')]}
-                    </span>
+                    <div style={{ width: '70%', height: '70%' }}>
+                      <PieceComponent type={piece.type} color={piece.color} />
+                    </div>
                   )}
                 </button>
               );

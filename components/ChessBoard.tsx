@@ -10,6 +10,9 @@ interface ChessBoardProps {
   disabled?: boolean;
   lastMove?: { from: string; to: string };
   orientation?: 'white' | 'black';
+  hintSquare?: string | null; // Square of the piece to move (hint level 1)
+  hintDestinations?: string[]; // Destination squares (hint level 2)
+  wrongMove?: boolean; // Flash red on wrong move
 }
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -56,6 +59,9 @@ export function ChessBoard({
   disabled = false,
   lastMove,
   orientation = 'white',
+  hintSquare,
+  hintDestinations = [],
+  wrongMove = false,
 }: ChessBoardProps) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const chess = useMemo(() => new Chess(fen), [fen]);
@@ -170,11 +176,19 @@ export function ChessBoard({
               const isSelected = selectedSquare === square;
               const isValidTarget = selectedSquare && legalMoves[selectedSquare]?.includes(square);
               const hasPieceOnTarget = isValidTarget && chess.get(square);
+              const isHintPiece = hintSquare === square;
+              const isHintDestination = hintDestinations.includes(square);
 
               // Lichess default board colors - beige and green
               let bgColor = isLight ? '#f0d9b5' : '#b58863';
               
-              if (isHighlightedMove) {
+              if (isHintPiece) {
+                // Hint highlight - blue glow for the piece to move
+                bgColor = isLight ? '#afd8f8' : '#5ba3d9';
+              } else if (isHintDestination) {
+                // Hint destination - subtle blue
+                bgColor = isLight ? '#c8e6f5' : '#6db3e0';
+              } else if (isHighlightedMove) {
                 bgColor = isLight ? '#cdd26a' : '#aaa23a';
               } else if (isSelected) {
                 bgColor = isLight ? '#f7f769' : '#baca2b';

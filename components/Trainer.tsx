@@ -8,7 +8,7 @@ import { TrainingPanel } from './TrainingPanel';
 import { MovesPanel } from './MovesPanel';
 import { GameList } from './GameList';
 import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Lightbulb } from 'lucide-react';
 
 interface TrainerProps {
   games: Game[];
@@ -23,6 +23,8 @@ export function Trainer({ games }: TrainerProps) {
   const [message, setMessage] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [completedGames, setCompletedGames] = useState<Set<string>>(new Set());
+  const [hintLevel, setHintLevel] = useState<0 | 1 | 2>(0); // 0 = no hint, 1 = show piece, 2 = show destinations
+  const [showMoveComment, setShowMoveComment] = useState(false); // Only show comment after correct move
 
   // Initialize game state when game is selected
   useEffect(() => {
@@ -30,6 +32,8 @@ export function Trainer({ games }: TrainerProps) {
       const chess = new Chess();
       setGameState(chess);
       setIsCorrect(null);
+      setHintLevel(0);
+      setShowMoveComment(false);
       
       // In train mode, if playing as Black, auto-play White's first move
       if (trainingMode === 'train' && playerColor === 'b' && currentGame.moves.length > 0) {
@@ -131,6 +135,34 @@ export function Trainer({ games }: TrainerProps) {
     return Math.ceil(moveIndex / 2);
   }, [moveIndex]);
 
+  // Get hint data for current expected move
+  const getHintData = useCallback(() => {
+    if (!currentGame || moveIndex >= currentGame.moves.length) {
+      return { hintSquare: null, hintDestinations: [] };
+    }
+    
+    const expectedMove = currentGame.moves[moveIndex];
+    if (!expectedMove) {
+      return { hintSquare: null, hintDestinations: [] };
+    }
+    
+    return {
+      hintSquare: expectedMove.from,
+      hintDestinations: [expectedMove.to],
+    };
+  }, [currentGame, moveIndex]);
+
+  // Handle hint button click
+  const handleHint = useCallback(() => {
+    if (hintLevel === 0) {
+      setHintLevel(1);
+      setMessage('Hint: The highlighted piece should move.');
+    } else if (hintLevel === 1) {
+      setHintLevel(2);
+      setMessage('Hint: Move to the highlighted square.');
+    }
+  }, [hintLevel]);
+
   // Auto-play opponent's move after user makes correct move
   const playOpponentMove = useCallback((currentMoveIndex: number) => {
     if (!currentGame) return currentMoveIndex;
@@ -189,6 +221,8 @@ export function Trainer({ games }: TrainerProps) {
             nextGameMove.to === move.to
           ) {
             setIsCorrect(true);
+            setHintLevel(0); // Reset hints
+            setShowMoveComment(true); // Show comment after correct move
             
             // Move to next position
             let newIndex = moveIndex + 1;
@@ -202,6 +236,7 @@ export function Trainer({ games }: TrainerProps) {
                 setMessage('Correct!');
                 setTimeout(() => {
                   setMoveIndex(opponentIndex);
+                  setShowMoveComment(false); // Hide comment when it's user's turn again
                   if (opponentIndex >= currentGame.moves.length) {
                     setMessage('Game complete! Well done!');
                     setIsCorrect(null);
@@ -219,10 +254,12 @@ export function Trainer({ games }: TrainerProps) {
               setMessage('Game complete! Well done!');
             } else {
               setMessage('Correct! Your turn...');
+              setShowMoveComment(false);
             }
           } else {
+            // Wrong move - do NOT reveal the answer
             setIsCorrect(false);
-            setMessage(`Wrong! Expected: ${nextGameMove?.san || 'end of game'}`);
+            setMessage('Incorrect. Try again.');
           }
         } else {
           // Explore mode - just advance
@@ -314,6 +351,7 @@ export function Trainer({ games }: TrainerProps) {
 
   const lastMove = moveIndex > 0 ? currentGame?.moves[moveIndex - 1] : undefined;
   const currentMove = getCurrentMove();
+  const hintData = getHintData();
 
   return (
     <div className="flex flex-col gap-6">
@@ -328,6 +366,9 @@ export function Trainer({ games }: TrainerProps) {
                 disabled={moveIndex >= (currentGame?.moves.length || 0) && trainingMode === 'train'}
                 lastMove={lastMove ? { from: lastMove.from, to: lastMove.to } : undefined}
                 orientation={playerColor === 'w' ? 'white' : 'black'}
+                hintSquare={trainingMode === 'train' && hintLevel >= 1 ? hintData.hintSquare : null}
+                hintDestinations={trainingMode === 'train' && hintLevel >= 2 ? hintData.hintDestinations : []}
+                wrongMove={isCorrect === false}
               />
             ) : (
               <div className="w-full max-w-md aspect-square bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
@@ -381,11 +422,31 @@ export function Trainer({ games }: TrainerProps) {
                 >
                   <ChevronsRight className="h-4 w-4" />
                 </Button>
+
+                {/* Hint button - only in train mode */}
+                {trainingMode === 'train' && moveIndex < currentGame.moves.length && (
+                  <>
+                    <div className="w-px h-6 bg-gray-700 mx-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleHint}
+                      disabled={hintLevel >= 2}
+                      className={`text-gray-400 hover:text-amber-400 hover:bg-amber-900/30 h-8 px-3 gap-1.5 ${
+                        hintLevel > 0 ? 'text-amber-400 bg-amber-900/20' : ''
+                      }`}
+                      title={hintLevel === 0 ? 'Get a hint' : hintLevel === 1 ? 'Show destination' : 'Hint active'}
+                    >
+                      <Lightbulb className="h-4 w-4" />
+                      <span className="text-xs">Hint</span>
+                    </Button>
+                  </>
+                )}
               </div>
             )}
 
-            {/* Current move comment display */}
-            {currentGame && currentMove?.comment && (
+            {/* Current move comment display - only show after correct move in train mode, or always in explore */}
+            {currentGame && currentMove?.comment && (trainingMode === 'explore' || showMoveComment) && (
               <div 
                 className="w-full max-w-[400px] rounded-lg p-4 border-l-3"
                 style={{

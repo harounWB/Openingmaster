@@ -15,89 +15,36 @@ interface ChessBoardProps {
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
-// Lichess.org style pieces - clean outline/filled SVG
+// Official Lichess cburnett piece set from CDN
+const PIECE_URLS: Record<string, string> = {
+  'wK': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/wK.svg',
+  'wQ': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/wQ.svg',
+  'wR': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/wR.svg',
+  'wB': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/wB.svg',
+  'wN': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/wN.svg',
+  'wP': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/wP.svg',
+  'bK': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/bK.svg',
+  'bQ': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/bQ.svg',
+  'bR': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/bR.svg',
+  'bB': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/bB.svg',
+  'bN': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/bN.svg',
+  'bP': 'https://lichess1.org/assets/_Q40sQM/piece/cburnett/bP.svg',
+};
+
+// Piece component using official Lichess SVG assets
 const PieceComponent: React.FC<{ type: string; color: 'w' | 'b' }> = ({ type, color }) => {
-  const isWhite = color === 'w';
-  const pieceType = type.toUpperCase();
+  const pieceKey = `${color}${type.toUpperCase()}`;
+  const url = PIECE_URLS[pieceKey];
+
+  if (!url) return null;
 
   return (
-    <svg viewBox="0 0 45 45" className="w-full h-full">
-      {pieceType === 'P' && isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22.5 9c-3.763 0-6.824 2.629-7.937 5.826h2.093c.84-1.976 2.67-3.282 5.844-3.282 3.174 0 5.005 1.306 5.844 3.282h2.093C29.324 11.629 26.263 9 22.5 9z" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-          <path d="M15.5 32h15v2.5h-15z" fill="#000"/>
-          <ellipse cx="22.5" cy="25" rx="5" ry="4" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-        </g>
-      )}
-      {pieceType === 'P' && !isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22.5 9c-3.763 0-6.824 2.629-7.937 5.826h2.093c.84-1.976 2.67-3.282 5.844-3.282 3.174 0 5.005 1.306 5.844 3.282h2.093C29.324 11.629 26.263 9 22.5 9z" fill="#000"/>
-          <path d="M15.5 32h15v2.5h-15z" fill="#000"/>
-          <ellipse cx="22.5" cy="25" rx="5" ry="4" fill="#000"/>
-        </g>
-      )}
-      
-      {pieceType === 'N' && isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22.5 10c10.8 0 16.4 8.6 15 21H31c3.6-4.5 2.6-13.5 0-17-3-4.5-7-5-8.5-5S17.9 5.4 15 9c-2.6 3.5-3.6 12.5 0 17H7.5c-1.4-12.4 4.3-21 15-21z" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-        </g>
-      )}
-      {pieceType === 'N' && !isWhite && (
-        <path d="M22.5 10c10.8 0 16.4 8.6 15 21H31c3.6-4.5 2.6-13.5 0-17-3-4.5-7-5-8.5-5S17.9 5.4 15 9c-2.6 3.5-3.6 12.5 0 17H7.5c-1.4-12.4 4.3-21 15-21z" fill="#000" stroke="#000" strokeWidth="1.5"/>
-      )}
-      
-      {pieceType === 'B' && isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9.5 36c3.5-1 6-2 8-4 1-2 1-4.5-1-6.5-1.5-1.5-1-4.5 0-5s1.5-1 1.5-4c0-2-2.5-3-4-4-1.5-1-4-1-4.5.5s.5 1.5 1 2c1 1 1 2.5 0 3-1 1-2 1-2 1s3.5 1 4 2.8c.5 1.8-1 2.8-1 2.8M17.5 31S16 8 16 4c0 0 2 1 2 4s-2.5-2-2.5 4 2.5 6 4 6.5 3 13 4 14" fill="#fff" stroke="#000" strokeWidth="1"/>
-        </g>
-      )}
-      {pieceType === 'B' && !isWhite && (
-        <path d="M9.5 36c3.5-1 6-2 8-4 1-2 1-4.5-1-6.5-1.5-1.5-1-4.5 0-5s1.5-1 1.5-4c0-2-2.5-3-4-4-1.5-1-4-1-4.5.5s.5 1.5 1 2c1 1 1 2.5 0 3-1 1-2 1-2 1s3.5 1 4 2.8c.5 1.8-1 2.8-1 2.8M17.5 31S16 8 16 4c0 0 2 1 2 4s-2.5-2-2.5 4 2.5 6 4 6.5 3 13 4 14" fill="#000" stroke="#000" strokeWidth="1.5"/>
-      )}
-      
-      {pieceType === 'R' && isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 39h6v-3h4v3h6v-3h4v3h6v-5H9v5zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 29h4v-7h4v7h4v-7h4v7h4V11H9v18h3v0z" fill="#fff" stroke="#000" strokeWidth="1"/>
-        </g>
-      )}
-      {pieceType === 'R' && !isWhite && (
-        <path d="M9 39h6v-3h4v3h6v-3h4v3h6v-5H9v5zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 29h4v-7h4v7h4v-7h4v7h4V11H9v18h3v0z" fill="#000" stroke="#000" strokeWidth="1.5"/>
-      )}
-      
-      {pieceType === 'Q' && isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="22.5" cy="18" r="7" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-          <circle cx="12" cy="27" r="5" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-          <circle cx="33" cy="27" r="5" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-          <path d="M12 32h22v5H12z" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-        </g>
-      )}
-      {pieceType === 'Q' && !isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="22.5" cy="18" r="7" fill="#000"/>
-          <circle cx="12" cy="27" r="5" fill="#000"/>
-          <circle cx="33" cy="27" r="5" fill="#000"/>
-          <path d="M12 32h22v5H12z" fill="#000"/>
-        </g>
-      )}
-      
-      {pieceType === 'K' && isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="22.5" y1="8" x2="22.5" y2="15" stroke="#000" strokeWidth="2"/>
-          <line x1="18" y1="12" x2="27" y2="12" stroke="#000" strokeWidth="1.5"/>
-          <circle cx="22.5" cy="10" r="1.5" fill="#000"/>
-          <path d="M11 25h23v12H11z" fill="#fff" stroke="#000" strokeWidth="1.5"/>
-        </g>
-      )}
-      {pieceType === 'K' && !isWhite && (
-        <g fillRule="evenodd" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="22.5" y1="8" x2="22.5" y2="15" stroke="#000" strokeWidth="2"/>
-          <line x1="18" y1="12" x2="27" y2="12" stroke="#000" strokeWidth="1.5"/>
-          <circle cx="22.5" cy="10" r="1.5" fill="#000"/>
-          <path d="M11 25h23v12H11z" fill="#000"/>
-        </g>
-      )}
-    </svg>
+    <img
+      src={url}
+      alt={`${color === 'w' ? 'white' : 'black'} ${type}`}
+      className="w-full h-full"
+      draggable={false}
+    />
   );
 };
 
@@ -209,10 +156,10 @@ export function ChessBoard({
 
   return (
     <div className="flex justify-center w-full">
-      <div className="rounded-lg overflow-hidden shadow-xl" style={{ width: '360px' }}>
-        <div className="grid grid-cols-8 gap-0">
-          {ranks.map((rank) =>
-            files.map((file) => {
+      <div className="rounded-lg overflow-hidden shadow-xl" style={{ width: '400px' }}>
+        <div className="grid grid-cols-8 gap-0 relative">
+          {ranks.map((rank, rankIdx) =>
+            files.map((file, fileIdx) => {
               const square = `${file}${rank}`;
               const piece = chess.get(square);
               const fileIndex = FILES.indexOf(file);
@@ -221,39 +168,85 @@ export function ChessBoard({
               const isHighlightedMove = lastMove && (lastMove.from === square || lastMove.to === square);
               const isSelected = selectedSquare === square;
               const isValidTarget = selectedSquare && legalMoves[selectedSquare]?.includes(square);
+              const hasPieceOnTarget = isValidTarget && chess.get(square);
 
-              // Lichess.org style colors - tan and brown
+              // Lichess default board colors - beige and green
               let bgColor = isLight ? '#f0d9b5' : '#b58863';
               
               if (isHighlightedMove) {
-                bgColor = isLight ? '#baca44' : '#a9a933';
+                bgColor = isLight ? '#cdd26a' : '#aaa23a';
               } else if (isSelected) {
-                bgColor = isLight ? '#baca44' : '#a9a933';
+                bgColor = isLight ? '#f7f769' : '#baca2b';
               }
+
+              // Show file coordinate on bottom row
+              const showFile = rankIdx === 7;
+              // Show rank coordinate on left column
+              const showRank = fileIdx === 0;
 
               return (
                 <button
                   key={square}
                   onClick={() => onSquareClick(square)}
                   disabled={disabled}
-                  className="w-full h-full flex items-center justify-center transition-colors cursor-pointer hover:opacity-90 disabled:cursor-not-allowed relative"
+                  className="w-full h-full flex items-center justify-center cursor-pointer disabled:cursor-not-allowed relative"
                   style={{ 
                     backgroundColor: bgColor,
                     aspectRatio: '1',
                   }}
                   aria-label={`Square ${square}`}
                 >
-                  {isValidTarget && (
+                  {/* Rank coordinate (1-8) */}
+                  {showRank && (
+                    <span 
+                      className="absolute top-0.5 left-0.5 text-xs font-bold select-none"
+                      style={{ 
+                        color: isLight ? '#b58863' : '#f0d9b5',
+                        fontSize: '10px',
+                      }}
+                    >
+                      {rank}
+                    </span>
+                  )}
+                  
+                  {/* File coordinate (a-h) */}
+                  {showFile && (
+                    <span 
+                      className="absolute bottom-0.5 right-1 text-xs font-bold select-none"
+                      style={{ 
+                        color: isLight ? '#b58863' : '#f0d9b5',
+                        fontSize: '10px',
+                      }}
+                    >
+                      {file}
+                    </span>
+                  )}
+
+                  {/* Legal move indicator - dot for empty, ring for capture */}
+                  {isValidTarget && !hasPieceOnTarget && (
                     <div
-                      className="absolute rounded-full bg-gray-800 opacity-40"
+                      className="absolute rounded-full"
                       style={{
-                        width: '20%',
-                        height: '20%',
+                        width: '28%',
+                        height: '28%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
                       }}
                     />
                   )}
+                  {isValidTarget && hasPieceOnTarget && (
+                    <div
+                      className="absolute rounded-full border-4"
+                      style={{
+                        width: '85%',
+                        height: '85%',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
+                  )}
+
+                  {/* Piece */}
                   {piece && (
-                    <div style={{ width: '78%', height: '78%' }}>
+                    <div className="w-full h-full p-0.5">
                       <PieceComponent type={piece.type} color={piece.color} />
                     </div>
                   )}

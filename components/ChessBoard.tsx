@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { Chess } from 'chess.js';
-import { THEME_COLORS } from '@/lib/constants';
 
 interface ChessBoardProps {
   fen: string;
@@ -13,7 +12,7 @@ interface ChessBoardProps {
   orientation?: 'white' | 'black';
 }
 
-const PIECE_UNICODE: Record<string, string> = {
+const PIECE_SYMBOLS: Record<string, string> = {
   'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
   'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟',
 };
@@ -129,28 +128,26 @@ export function ChessBoard({
 
   return (
     <div className="flex justify-center w-full">
-      <div 
-        className="rounded-xl overflow-hidden shadow-2xl"
-        style={{
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.3)',
-        }}
-      >
-        <div className="w-full grid grid-cols-8 gap-0" style={{ width: '500px', aspectRatio: '1' }}>
+      <div className="rounded-lg overflow-hidden shadow-xl" style={{ width: '360px' }}>
+        <div className="grid grid-cols-8 gap-0">
           {ranks.map((rank) =>
             files.map((file) => {
               const square = `${file}${rank}`;
               const piece = chess.get(square);
-              const isLight = (FILES.indexOf(file) + RANKS.indexOf(rank)) % 2 === 0;
+              const fileIndex = FILES.indexOf(file);
+              const rankIndex = RANKS.indexOf(rank);
+              const isLight = (fileIndex + rankIndex) % 2 === 0;
               const isHighlightedMove = lastMove && (lastMove.from === square || lastMove.to === square);
               const isSelected = selectedSquare === square;
               const isValidTarget = selectedSquare && legalMoves[selectedSquare]?.includes(square);
 
-              let bgColor = isLight ? '#8a95a8' : '#3d4456';
+              // Chess.com style colors
+              let bgColor = isLight ? '#f0d9b5' : '#b58863';
               
               if (isHighlightedMove) {
-                bgColor = THEME_COLORS.highlight;
+                bgColor = isLight ? '#baca44' : '#a9a933';
               } else if (isSelected) {
-                bgColor = THEME_COLORS.selectedSquare;
+                bgColor = isLight ? '#baca44' : '#a9a933';
               }
 
               return (
@@ -158,22 +155,26 @@ export function ChessBoard({
                   key={square}
                   onClick={() => onSquareClick(square)}
                   disabled={disabled}
-                  className="w-full h-full flex items-center justify-center text-6xl font-bold transition-colors cursor-pointer hover:opacity-80 disabled:cursor-not-allowed relative"
-                  style={{ backgroundColor: bgColor }}
+                  className="w-full h-full flex items-center justify-center text-5xl font-bold transition-colors cursor-pointer hover:opacity-90 disabled:cursor-not-allowed relative"
+                  style={{ 
+                    backgroundColor: bgColor,
+                    aspectRatio: '1',
+                  }}
                   aria-label={`Square ${square}`}
                 >
                   {isValidTarget && (
                     <div
-                      className="absolute rounded-full"
+                      className="absolute rounded-full bg-gray-800 opacity-40"
                       style={{
-                        width: '30%',
-                        height: '30%',
-                        border: `3px solid ${THEME_COLORS.accentSecondary}`,
+                        width: '20%',
+                        height: '20%',
                       }}
                     />
                   )}
                   {piece && (
-                    <span className="select-none drop-shadow-lg">{PIECE_UNICODE[piece.type + (piece.color === 'w' ? '' : '')]}</span>
+                    <span className="select-none" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                      {PIECE_SYMBOLS[piece.type + (piece.color === 'w' ? '' : '')]}
+                    </span>
                   )}
                 </button>
               );

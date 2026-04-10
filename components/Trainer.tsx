@@ -256,7 +256,7 @@ export function Trainer({ games }: TrainerProps) {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px_280px] gap-6">
         <div className="flex flex-col gap-4">
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-3">
             {currentGame && gameState ? (
               <ChessBoard
                 fen={getCurrentFen()}
@@ -269,6 +269,55 @@ export function Trainer({ games }: TrainerProps) {
             ) : (
               <div className="w-full max-w-md aspect-square bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
                 <p className="text-gray-400">Select a game to begin</p>
+              </div>
+            )}
+
+            {/* Navigation controls below board */}
+            {currentGame && (
+              <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-2 border border-gray-800">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigateMove(0)}
+                  disabled={moveIndex === 0}
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  title="First move"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleKeyboardNavigation('prev')}
+                  disabled={moveIndex === 0}
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  title="Previous move"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-gray-400 min-w-[60px] text-center">
+                  {moveIndex} / {currentGame.moves.length}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleKeyboardNavigation('next')}
+                  disabled={trainingMode === 'train' ? moveIndex >= currentGame.moves.length : moveIndex >= currentGame.moves.length}
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  title="Next move"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigateMove(currentGame.moves.length)}
+                  disabled={trainingMode === 'train' || moveIndex >= currentGame.moves.length}
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  title="Last move"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>

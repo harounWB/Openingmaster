@@ -15,60 +15,186 @@ interface ChessBoardProps {
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
-// Chess.com style SVG pieces
+// Chess.com Neo wood style pieces with realistic shading
 const PieceComponent: React.FC<{ type: string; color: 'w' | 'b' }> = ({ type, color }) => {
   const isWhite = color === 'w';
-  const fill = isWhite ? '#f0d9b5' : '#312e2b';
-  const stroke = isWhite ? '#1a1a1a' : '#f0d9b5';
   const pieceType = type.toUpperCase();
 
-  const pieces: Record<string, JSX.Element> = {
-    'P': (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <circle cx="50" cy="30" r="12" fill={fill} stroke={stroke} strokeWidth="2" />
-        <rect x="42" y="42" width="16" height="35" fill={fill} stroke={stroke} strokeWidth="2" />
-        <ellipse cx="50" cy="82" rx="18" ry="6" fill={fill} stroke={stroke} strokeWidth="2" />
-      </svg>
-    ),
-    'N': (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <path d="M 35 70 Q 25 50 30 30 Q 35 20 45 20 Q 55 20 50 35 Q 45 40 50 50 L 60 50 Q 70 50 70 65 L 70 75 Q 70 82 65 85 L 35 85 Z" fill={fill} stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
-      </svg>
-    ),
-    'B': (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <circle cx="50" cy="25" r="8" fill={fill} stroke={stroke} strokeWidth="2" />
-        <path d="M 42 35 L 38 55 Q 35 70 50 80 Q 65 70 62 55 L 58 35 Z" fill={fill} stroke={stroke} strokeWidth="2" />
-      </svg>
-    ),
-    'R': (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <rect x="30" y="20" width="40" height="15" fill={fill} stroke={stroke} strokeWidth="2" />
-        <rect x="35" y="35" width="30" height="35" fill={fill} stroke={stroke} strokeWidth="2" />
-        <rect x="32" y="70" width="36" height="12" fill={fill} stroke={stroke} strokeWidth="2" />
-        <rect x="40" y="25" width="6" height="10" fill={fill} stroke={stroke} strokeWidth="1" />
-        <rect x="54" y="25" width="6" height="10" fill={fill} stroke={stroke} strokeWidth="1" />
-      </svg>
-    ),
-    'Q': (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <circle cx="50" cy="20" r="8" fill={fill} stroke={stroke} strokeWidth="2" />
-        <circle cx="35" cy="25" r="5" fill={fill} stroke={stroke} strokeWidth="2" />
-        <circle cx="65" cy="25" r="5" fill={fill} stroke={stroke} strokeWidth="2" />
-        <path d="M 30 35 L 25 60 Q 25 75 50 82 Q 75 75 75 60 L 70 35 Z" fill={fill} stroke={stroke} strokeWidth="2" />
-      </svg>
-    ),
-    'K': (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <line x1="50" y1="15" x2="50" y2="30" stroke={stroke} strokeWidth="3" />
-        <line x1="45" y1="25" x2="55" y2="25" stroke={stroke} strokeWidth="2" />
-        <circle cx="50" cy="20" r="3" fill={stroke} />
-        <path d="M 35 38 L 30 65 Q 30 78 50 85 Q 70 78 70 65 L 65 38 Z" fill={fill} stroke={stroke} strokeWidth="2" />
-      </svg>
-    ),
-  };
-
-  return pieces[pieceType] || null;
+  if (isWhite) {
+    // White pieces
+    const whitePieces: Record<string, JSX.Element> = {
+      'P': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="whitePawnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#f5e6d3', stopOpacity: 1 }} />
+              <stop offset="50%" style={{ stopColor: '#e8d4b8', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#d9c4a8', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="28" r="11" fill="url(#whitePawnGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <rect x="44" y="39" width="12" height="28" fill="url(#whitePawnGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <ellipse cx="50" cy="78" rx="16" ry="5" fill="#c9b89d" stroke="#8b7355" strokeWidth="1.5" />
+        </svg>
+      ),
+      'N': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="whiteKnightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#f5e6d3', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#d9c4a8', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <path d="M 30 65 L 35 35 Q 40 25 50 22 Q 60 25 62 38 L 68 50 Q 70 60 65 70 Q 60 78 50 82 Q 40 78 35 70 Z" fill="url(#whiteKnightGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <circle cx="48" cy="48" r="3" fill="#8b7355" opacity="0.4" />
+        </svg>
+      ),
+      'B': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="whiteBishopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#f5e6d3', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#d9c4a8', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="22" r="7" fill="url(#whiteBishopGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <path d="M 40 32 L 38 55 Q 35 70 50 80 Q 65 70 62 55 L 60 32 Z" fill="url(#whiteBishopGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <circle cx="50" cy="35" r="4" fill="#8b7355" opacity="0.3" />
+        </svg>
+      ),
+      'R': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="whiteRookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#f5e6d3', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#d9c4a8', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <rect x="28" y="18" width="44" height="14" fill="url(#whiteRookGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <rect x="35" y="32" width="30" height="32" fill="url(#whiteRookGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <rect x="30" y="68" width="40" height="10" fill="#c9b89d" stroke="#8b7355" strokeWidth="1.5" />
+          <rect x="38" y="22" width="4" height="10" fill="url(#whiteRookGrad)" stroke="#8b7355" strokeWidth="1" />
+          <rect x="58" y="22" width="4" height="10" fill="url(#whiteRookGrad)" stroke="#8b7355" strokeWidth="1" />
+        </svg>
+      ),
+      'Q': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="whiteQueenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#f5e6d3', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#d9c4a8', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="18" r="8" fill="url(#whiteQueenGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <circle cx="35" cy="24" r="5" fill="url(#whiteQueenGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <circle cx="65" cy="24" r="5" fill="url(#whiteQueenGrad)" stroke="#8b7355" strokeWidth="1.5" />
+          <path d="M 28 35 L 25 62 Q 25 75 50 82 Q 75 75 75 62 L 72 35 Z" fill="url(#whiteQueenGrad)" stroke="#8b7355" strokeWidth="1.5" />
+        </svg>
+      ),
+      'K': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="whiteKingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#f5e6d3', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#d9c4a8', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <line x1="50" y1="14" x2="50" y2="30" stroke="#8b7355" strokeWidth="2.5" />
+          <line x1="43" y1="24" x2="57" y2="24" stroke="#8b7355" strokeWidth="2" />
+          <circle cx="50" cy="18" r="2.5" fill="#8b7355" />
+          <path d="M 32 38 L 28 65 Q 28 78 50 85 Q 72 78 72 65 L 68 38 Z" fill="url(#whiteKingGrad)" stroke="#8b7355" strokeWidth="1.5" />
+        </svg>
+      ),
+    };
+    return whitePieces[pieceType] || null;
+  } else {
+    // Black pieces
+    const blackPieces: Record<string, JSX.Element> = {
+      'P': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="blackPawnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#5a4a3a', stopOpacity: 1 }} />
+              <stop offset="50%" style={{ stopColor: '#3d2f25', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#2a1f18', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="28" r="11" fill="url(#blackPawnGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <rect x="44" y="39" width="12" height="28" fill="url(#blackPawnGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <ellipse cx="50" cy="78" rx="16" ry="5" fill="#1a1410" stroke="#0f0c0a" strokeWidth="1.5" />
+        </svg>
+      ),
+      'N': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="blackKnightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#5a4a3a', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#2a1f18', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <path d="M 30 65 L 35 35 Q 40 25 50 22 Q 60 25 62 38 L 68 50 Q 70 60 65 70 Q 60 78 50 82 Q 40 78 35 70 Z" fill="url(#blackKnightGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <circle cx="48" cy="48" r="3" fill="#ffffff" opacity="0.2" />
+        </svg>
+      ),
+      'B': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="blackBishopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#5a4a3a', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#2a1f18', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="22" r="7" fill="url(#blackBishopGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <path d="M 40 32 L 38 55 Q 35 70 50 80 Q 65 70 62 55 L 60 32 Z" fill="url(#blackBishopGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <circle cx="50" cy="35" r="4" fill="#ffffff" opacity="0.15" />
+        </svg>
+      ),
+      'R': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="blackRookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#5a4a3a', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#2a1f18', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <rect x="28" y="18" width="44" height="14" fill="url(#blackRookGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <rect x="35" y="32" width="30" height="32" fill="url(#blackRookGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <rect x="30" y="68" width="40" height="10" fill="#1a1410" stroke="#0f0c0a" strokeWidth="1.5" />
+          <rect x="38" y="22" width="4" height="10" fill="url(#blackRookGrad)" stroke="#1a1410" strokeWidth="1" />
+          <rect x="58" y="22" width="4" height="10" fill="url(#blackRookGrad)" stroke="#1a1410" strokeWidth="1" />
+        </svg>
+      ),
+      'Q': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="blackQueenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#5a4a3a', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#2a1f18', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="18" r="8" fill="url(#blackQueenGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <circle cx="35" cy="24" r="5" fill="url(#blackQueenGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <circle cx="65" cy="24" r="5" fill="url(#blackQueenGrad)" stroke="#1a1410" strokeWidth="1.5" />
+          <path d="M 28 35 L 25 62 Q 25 75 50 82 Q 75 75 75 62 L 72 35 Z" fill="url(#blackQueenGrad)" stroke="#1a1410" strokeWidth="1.5" />
+        </svg>
+      ),
+      'K': (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <linearGradient id="blackKingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#5a4a3a', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#2a1f18', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          <line x1="50" y1="14" x2="50" y2="30" stroke="#1a1410" strokeWidth="2.5" />
+          <line x1="43" y1="24" x2="57" y2="24" stroke="#1a1410" strokeWidth="2" />
+          <circle cx="50" cy="18" r="2.5" fill="#1a1410" />
+          <path d="M 32 38 L 28 65 Q 28 78 50 85 Q 72 78 72 65 L 68 38 Z" fill="url(#blackKingGrad)" stroke="#1a1410" strokeWidth="1.5" />
+        </svg>
+      ),
+    };
+    return blackPieces[pieceType] || null;
+  }
 };
 
 export function ChessBoard({
@@ -192,8 +318,8 @@ export function ChessBoard({
               const isSelected = selectedSquare === square;
               const isValidTarget = selectedSquare && legalMoves[selectedSquare]?.includes(square);
 
-              // Chess.com style colors
-              let bgColor = isLight ? '#f0d9b5' : '#b58863';
+              // Chess.com green and cream colors (Neo theme)
+              let bgColor = isLight ? '#f5f5dc' : '#739552';
               
               if (isHighlightedMove) {
                 bgColor = isLight ? '#baca44' : '#a9a933';
@@ -223,7 +349,7 @@ export function ChessBoard({
                     />
                   )}
                   {piece && (
-                    <div style={{ width: '70%', height: '70%' }}>
+                    <div style={{ width: '78%', height: '78%' }}>
                       <PieceComponent type={piece.type} color={piece.color} />
                     </div>
                   )}

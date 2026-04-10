@@ -29,11 +29,18 @@ export function Trainer({ games }: TrainerProps) {
     if (currentGame) {
       const chess = new Chess();
       setGameState(chess);
-      setMoveIndex(0);
-      setMessage(`Playing as ${playerColor === 'w' ? 'White' : 'Black'}. ${playerColor === 'w' ? 'White to move.' : 'Black to move.'}`);
       setIsCorrect(null);
+      
+      // In train mode, if playing as Black, auto-play White's first move
+      if (trainingMode === 'train' && playerColor === 'b' && currentGame.moves.length > 0) {
+        setMoveIndex(1); // Start after White's first move
+        setMessage(`Playing as Black. Your turn...`);
+      } else {
+        setMoveIndex(0);
+        setMessage(`Playing as ${playerColor === 'w' ? 'White' : 'Black'}. ${playerColor === 'w' ? 'Your turn...' : 'Your turn...'}`);
+      }
     }
-  }, [currentGame, playerColor]);
+  }, [currentGame, playerColor, trainingMode]);
 
   // Get current FEN position by replaying moves
   const getCurrentFen = useCallback((): string => {
@@ -124,6 +131,31 @@ export function Trainer({ games }: TrainerProps) {
     return Math.ceil(moveIndex / 2);
   }, [moveIndex]);
 
+  // Auto-play opponent's move after user makes correct move
+  const playOpponentMove = useCallback((currentMoveIndex: number) => {
+    if (!currentGame) return currentMoveIndex;
+    
+    // Check if next move is opponent's move
+    const nextMoveIndex = currentMoveIndex;
+    if (nextMoveIndex >= currentGame.moves.length) return currentMoveIndex;
+    
+    // Determine whose turn it is at this position
+    const chess = new Chess();
+    for (let i = 0; i < nextMoveIndex; i++) {
+      if (i < currentGame.moves.length) {
+        const m = currentGame.moves[i];
+        chess.move({ from: m.from, to: m.to, promotion: m.promotion });
+      }
+    }
+    
+    // If it's opponent's turn, auto-play their move
+    if (chess.turn() !== playerColor && nextMoveIndex < currentGame.moves.length) {
+      return nextMoveIndex + 1; // Skip to after opponent's move
+    }
+    
+    return currentMoveIndex;
+  }, [currentGame, playerColor]);
+
   const handleMove = useCallback(
     (move: { from: string; to: string; promotion?: string }) => {
       if (!currentGame) return;
@@ -157,8 +189,37 @@ export function Trainer({ games }: TrainerProps) {
             nextGameMove.to === move.to
           ) {
             setIsCorrect(true);
-            setMessage('Correct! Continuing...');
-            setMoveIndex(moveIndex + 1);
+            
+            // Move to next position
+            let newIndex = moveIndex + 1;
+            
+            // Auto-play opponent's response after a short delay
+            if (newIndex < currentGame.moves.length) {
+              const opponentIndex = playOpponentMove(newIndex);
+              if (opponentIndex > newIndex) {
+                // Show opponent's move with a slight delay for visual feedback
+                setMoveIndex(newIndex);
+                setMessage('Correct!');
+                setTimeout(() => {
+                  setMoveIndex(opponentIndex);
+                  if (opponentIndex >= currentGame.moves.length) {
+                    setMessage('Game complete! Well done!');
+                    setIsCorrect(null);
+                  } else {
+                    setMessage('Your turn...');
+                    setIsCorrect(null);
+                  }
+                }, 400);
+                return;
+              }
+            }
+            
+            setMoveIndex(newIndex);
+            if (newIndex >= currentGame.moves.length) {
+              setMessage('Game complete! Well done!');
+            } else {
+              setMessage('Correct! Your turn...');
+            }
           } else {
             setIsCorrect(false);
             setMessage(`Wrong! Expected: ${nextGameMove?.san || 'end of game'}`);
@@ -179,7 +240,7 @@ export function Trainer({ games }: TrainerProps) {
         setIsCorrect(false);
       }
     },
-    [currentGame, moveIndex, trainingMode, playerColor, getExpectedMove, getCurrentPosition]
+    [currentGame, moveIndex, trainingMode, playerColor, getExpectedMove, getCurrentPosition, playOpponentMove]
   );
 
   const handleSelectGame = useCallback((game: Game) => {
@@ -343,8 +404,8 @@ export function Trainer({ games }: TrainerProps) {
           )}
         </div>
 
-        {/* Moves and Comments Sidebar */}
-        {currentGame && (
+        {/* Moves and Comments Sidebar - Only show in explore mode */}
+        {currentGame && trainingMode === 'explore' && (
           <div className="flex-shrink-0">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Moves & Comments</h3>
             <MovesPanel

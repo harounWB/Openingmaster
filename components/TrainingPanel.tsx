@@ -171,19 +171,6 @@ export function TrainingPanel({
           {message}
         </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-1">
-          <div className="text-xs text-gray-400">
-            Progress: {moveIndex}/{game.moves.length}
-          </div>
-          <div className="w-full bg-gray-800 rounded h-2 overflow-hidden border border-gray-700">
-            <div
-              className="h-full bg-purple-600 transition-all duration-300"
-              style={{ width: `${moveProgressPercentage}%` }}
-            />
-          </div>
-        </div>
-
         {/* Control Buttons */}
         <div className="flex gap-2">
           <Button

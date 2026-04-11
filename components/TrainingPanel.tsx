@@ -171,14 +171,6 @@ export function TrainingPanel({
           {message}
         </div>
 
-        {/* Expected Move (Explore mode) */}
-        {trainingMode === 'explore' && expectedMove && (
-          <div className="text-sm p-2 bg-gray-800 rounded border border-gray-700">
-            <div className="text-gray-400 text-xs mb-1">Next move:</div>
-            <div className="text-blue-300 font-mono opacity-0 p-0 pr-1">{expectedMove}</div>
-          </div>
-        )}
-
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="text-xs text-gray-400">

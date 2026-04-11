@@ -534,13 +534,13 @@ export function ChessBoard({
             let finalY = pos.y;
 
             // Priority: dragging takes precedence over animation
-            if (isDraggingPiece && boardRef.current && draggingPieceCoords) {
+            if (isDraggingPiece && boardRef.current) {
               const boardRect = boardRef.current.getBoundingClientRect();
               const squareSize = boardRect.width / 8;
               
               // Calculate which square the piece should be at (0-7 index)
-              const fileIndex = (draggingPieceCoords.x - boardRect.left) / squareSize;
-              const rankIndex = (draggingPieceCoords.y - boardRect.top) / squareSize;
+              const fileIndex = (dragState.currentX - boardRect.left) / squareSize;
+              const rankIndex = (dragState.currentY - boardRect.top) / squareSize;
               
               // Clamp to board and convert to percentage for positioning
               finalX = Math.max(0, Math.min(7.5, fileIndex)) / 8;

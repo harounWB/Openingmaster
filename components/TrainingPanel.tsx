@@ -192,43 +192,6 @@ export function TrainingPanel({
           </div>
         </div>
 
-        {/* Move Navigation Controls */}
-        <div className="space-y-2">
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Move Navigation
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => onNavigateMove(0)}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
-            >
-              ⏮ Start
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onNavigateMove(Math.max(0, moveIndex - 1))}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
-            >
-              ◀ Previous
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onNavigateMove(Math.min(game.moves.length, moveIndex + 1))}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
-            >
-              Next ▶
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onNavigateMove(game.moves.length)}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs"
-            >
-              End ⏭
-            </Button>
-          </div>
-        </div>
-
         {/* Control Buttons */}
         <div className="flex gap-2">
           <Button

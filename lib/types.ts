@@ -19,6 +19,24 @@ export interface GameNode {
   next?: GameNode;
 }
 
+export interface MoveAttempt {
+  moveIndex: number;
+  wrongAttempts: number; // Count of wrong tries before success
+}
+
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
+export interface GameSession {
+  gameId: string;
+  difficulty: DifficultyLevel;
+  moveAttempts: MoveAttempt[];
+  startTime: number;
+  completedAt?: number;
+  totalMoves: number;
+  correctMoves: number;
+  totalMistakes: number;
+}
+
 export interface Game {
   id: string;
   white: string;

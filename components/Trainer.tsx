@@ -2,11 +2,12 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { Chess } from 'chess.js';
-import { Game, PlayerColor, TrainingMode } from '@/lib/types';
+import { Game, PlayerColor, TrainingMode, DifficultyLevel, GameSession, MoveAttempt } from '@/lib/types';
 import { ChessBoard } from './ChessBoard';
 import { TrainingPanel } from './TrainingPanel';
 import { MovesPanel } from './MovesPanel';
 import { GameList } from './GameList';
+import { SessionFeedback } from './SessionFeedback';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Lightbulb } from 'lucide-react';
 
@@ -26,6 +27,11 @@ export function Trainer({ games }: TrainerProps) {
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2>(0);
   const [showMoveComment, setShowMoveComment] = useState(false);
   const [wrongMoveSquares, setWrongMoveSquares] = useState<{ from: string; to: string } | null>(null);
+  const [correctMoveSquares, setCorrectMoveSquares] = useState<{ from: string; to: string } | null>(null);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
+  const [moveAttempts, setMoveAttempts] = useState<MoveAttempt[]>([]);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const [currentSession, setCurrentSession] = useState<GameSession | null>(null);
 
   // Initialize game state when game is selected
   useEffect(() => {
@@ -35,6 +41,22 @@ export function Trainer({ games }: TrainerProps) {
       setIsCorrect(null);
       setHintLevel(0);
       setShowMoveComment(false);
+      setMoveAttempts([]);
+      setSessionComplete(false);
+      setCorrectMoveSquares(null);
+      setWrongMoveSquares(null);
+      
+      // Create new session
+      const newSession: GameSession = {
+        gameId: currentGame.id,
+        difficulty,
+        moveAttempts: [],
+        startTime: Date.now(),
+        totalMoves: currentGame.moves.length,
+        correctMoves: 0,
+        totalMistakes: 0,
+      };
+      setCurrentSession(newSession);
       
       // In train mode, if playing as Black, auto-play White's first move
       if (trainingMode === 'train' && playerColor === 'b' && currentGame.moves.length > 0) {
@@ -45,7 +67,7 @@ export function Trainer({ games }: TrainerProps) {
         setMessage(`Playing as ${playerColor === 'w' ? 'White' : 'Black'}. ${playerColor === 'w' ? 'Your turn...' : 'Your turn...'}`);
       }
     }
-  }, [currentGame, playerColor, trainingMode]);
+  }, [currentGame, playerColor, trainingMode, difficulty]);
 
   // Get current FEN position by replaying moves
   const getCurrentFen = useCallback((): string => {
@@ -153,16 +175,31 @@ export function Trainer({ games }: TrainerProps) {
     };
   }, [currentGame, moveIndex]);
 
-  // Handle hint button click
+  // Handle hint button click - difficulty aware
   const handleHint = useCallback(() => {
-    if (hintLevel === 0) {
-      setHintLevel(1);
-      setMessage('Hint: The highlighted piece should move.');
-    } else if (hintLevel === 1) {
-      setHintLevel(2);
-      setMessage('Hint: Move to the highlighted square.');
+    if (difficulty === 'hard') {
+      setMessage('No hints available in Hard mode.');
+      return;
     }
-  }, [hintLevel]);
+
+    if (difficulty === 'medium') {
+      if (hintLevel === 0) {
+        setHintLevel(1);
+        setMessage('Hint: The highlighted piece should move.');
+      } else {
+        setMessage('Only one hint in Medium mode.');
+      }
+    } else {
+      // EASY mode - allow both hints
+      if (hintLevel === 0) {
+        setHintLevel(1);
+        setMessage('Hint: The highlighted piece should move.');
+      } else if (hintLevel === 1) {
+        setHintLevel(2);
+        setMessage('Hint: Move to the highlighted square.');
+      }
+    }
+  }, [hintLevel, difficulty]);
 
   // Auto-play opponent's move after user makes correct move
   const playOpponentMove = useCallback((currentMoveIndex: number) => {
@@ -228,6 +265,26 @@ export function Trainer({ games }: TrainerProps) {
           setIsCorrect(true);
           setHintLevel(0); // Reset hints
           setShowMoveComment(true); // Show comment after correct move
+          setCorrectMoveSquares({ from: move.from, to: move.to });
+          
+          // Track move attempt
+          const attemptIndex = moveAttempts.findIndex(a => a.moveIndex === moveIndex);
+          if (attemptIndex === -1) {
+            setMoveAttempts([...moveAttempts, { moveIndex, wrongAttempts: 0 }]);
+          }
+          
+          // Update session
+          if (currentSession) {
+            setCurrentSession({
+              ...currentSession,
+              correctMoves: currentSession.correctMoves + 1,
+            });
+          }
+          
+          // Green highlight clears after animation
+          setTimeout(() => {
+            setCorrectMoveSquares(null);
+          }, 300);
           
           // Move to next position
           let newIndex = moveIndex + 1;
@@ -243,6 +300,14 @@ export function Trainer({ games }: TrainerProps) {
                 setMoveIndex(opponentIndex);
                 setShowMoveComment(false); // Hide comment when it's user's turn again
                 if (opponentIndex >= currentGame.moves.length) {
+                  // Game complete - show session feedback
+                  if (currentSession) {
+                    setCurrentSession({
+                      ...currentSession,
+                      completedAt: Date.now(),
+                    });
+                  }
+                  setSessionComplete(true);
                   setMessage('Game complete! Well done!');
                   setIsCorrect(null);
                 } else {
@@ -256,16 +321,42 @@ export function Trainer({ games }: TrainerProps) {
           
           setMoveIndex(newIndex);
           if (newIndex >= currentGame.moves.length) {
+            // Game complete - show session feedback
+            if (currentSession) {
+              setCurrentSession({
+                ...currentSession,
+                completedAt: Date.now(),
+              });
+            }
+            setSessionComplete(true);
             setMessage('Game complete! Well done!');
           } else {
             setMessage('Correct! Your turn...');
             setShowMoveComment(false);
           }
         } else {
-          // WRONG MOVE - do NOT apply it, do NOT reveal answer
+          // WRONG MOVE - do NOT apply it, do NOT reveal answer, track mistake
           setIsCorrect(false);
           setWrongMoveSquares({ from: move.from, to: move.to });
           setMessage('Incorrect. Try again.');
+          
+          // Track mistake
+          const attemptIndex = moveAttempts.findIndex(a => a.moveIndex === moveIndex);
+          if (attemptIndex === -1) {
+            setMoveAttempts([...moveAttempts, { moveIndex, wrongAttempts: 1 }]);
+          } else {
+            const updated = [...moveAttempts];
+            updated[attemptIndex].wrongAttempts += 1;
+            setMoveAttempts(updated);
+          }
+          
+          // Update session mistake count
+          if (currentSession) {
+            setCurrentSession({
+              ...currentSession,
+              totalMistakes: currentSession.totalMistakes + 1,
+            });
+          }
           
           // Clear the wrong move highlighting after 400ms
           setTimeout(() => {
@@ -367,6 +458,24 @@ export function Trainer({ games }: TrainerProps) {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px_280px] gap-6">
         <div className="flex flex-col gap-4">
+          {/* Session Feedback - Show when game is complete */}
+          {sessionComplete && currentGame && currentSession && (
+            <SessionFeedback
+              session={currentSession}
+              moveAttempts={moveAttempts}
+              onReplay={() => {
+                setMoveIndex(0);
+                setSessionComplete(false);
+                setIsCorrect(null);
+              }}
+              onNewGame={() => {
+                setCurrentGame(null);
+                setSessionComplete(false);
+              }}
+            />
+          )}
+
+          {/* Chessboard */}
           <div className="flex flex-col items-center gap-3">
             {currentGame && gameState ? (
               <ChessBoard
@@ -380,6 +489,7 @@ export function Trainer({ games }: TrainerProps) {
                 hintDestinations={trainingMode === 'train' && hintLevel >= 2 ? hintData.hintDestinations : []}
                 wrongMove={isCorrect === false}
                 wrongMoveSquares={wrongMoveSquares}
+                correctMoveSquares={correctMoveSquares}
               />
             ) : (
               <div className="w-full max-w-md aspect-square bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
@@ -499,8 +609,10 @@ export function Trainer({ games }: TrainerProps) {
               message={message}
               isCorrect={isCorrect}
               expectedMove={getExpectedMove()}
+              difficulty={difficulty}
               onModeChange={setTrainingMode}
               onColorChange={setPlayerColor}
+              onDifficultyChange={setDifficulty}
               onReset={handleResetGame}
               onNavigateMove={handleNavigateMove}
               onCompleteGame={handleCompleteGame}

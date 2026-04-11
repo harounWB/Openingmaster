@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Game, PlayerColor, TrainingMode } from '@/lib/types';
+import { Game, PlayerColor, TrainingMode, DifficultyLevel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -13,8 +13,10 @@ interface TrainingPanelProps {
   message: string;
   isCorrect: boolean | null;
   expectedMove: string | null;
+  difficulty?: DifficultyLevel;
   onModeChange: (mode: TrainingMode) => void;
   onColorChange: (color: PlayerColor) => void;
+  onDifficultyChange?: (difficulty: DifficultyLevel) => void;
   onReset: () => void;
   onNavigateMove: (index: number) => void;
   onCompleteGame: () => void;
@@ -29,8 +31,10 @@ export function TrainingPanel({
   message,
   isCorrect,
   expectedMove,
+  difficulty = 'medium',
   onModeChange,
   onColorChange,
+  onDifficultyChange,
   onReset,
   onNavigateMove,
   onCompleteGame,
@@ -114,6 +118,40 @@ export function TrainingPanel({
             Play Black
           </Button>
         </div>
+
+        {/* Difficulty Level Selection - Only show in train mode */}
+        {trainingMode === 'train' && onDifficultyChange && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Difficulty
+            </div>
+            <div className="flex gap-1">
+              {(['easy', 'medium', 'hard'] as const).map((level) => (
+                <Button
+                  key={level}
+                  size="sm"
+                  onClick={() => onDifficultyChange(level)}
+                  className={`flex-1 text-xs capitalize ${
+                    difficulty === level
+                      ? level === 'easy'
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : level === 'medium'
+                        ? 'bg-yellow-600 hover:bg-yellow-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                      : 'bg-gray-800 hover:bg-gray-700'
+                  }`}
+                >
+                  {level}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">
+              {difficulty === 'easy' && 'Hints available • Destination shown'}
+              {difficulty === 'medium' && 'First hint only • No destination'}
+              {difficulty === 'hard' && 'No hints • Only feedback'}
+            </p>
+          </div>
+        )}
 
         {/* Status Message */}
         <div

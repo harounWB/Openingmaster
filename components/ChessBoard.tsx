@@ -60,10 +60,13 @@ function squareToCoords(square: string, orientation: 'white' | 'black'): { x: nu
 function coordsToSquare(x: number, y: number, orientation: 'white' | 'black'): string | null {
   if (x < 0 || x >= 8 || y < 0 || y >= 8) return null;
   
+  // x and y are pixel-grid indices (0=left/top, 7=right/bottom).
+  // RANKS = ['8','7','6','5','4','3','2','1'], so RANKS[y] maps y=0 → rank 8 (top row).
+  // FILES = ['a','b',...,'h'], so FILES[x] maps x=0 → file a (left column) for white.
   if (orientation === 'white') {
-    return `${FILES[x]}${RANKS[7 - y]}`;
+    return `${FILES[x]}${RANKS[y]}`;
   } else {
-    return `${FILES[7 - x]}${RANKS[y]}`;
+    return `${FILES[7 - x]}${RANKS[7 - y]}`;
   }
 }
 

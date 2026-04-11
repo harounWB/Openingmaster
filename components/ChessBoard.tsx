@@ -93,8 +93,6 @@ export function ChessBoard({
 }: ChessBoardProps) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [shakeBoard, setShakeBoard] = useState(false);
-  const [animatingFrom, setAnimatingFrom] = useState<string | null>(null);
-  const [animatingTo, setAnimatingTo] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState>({ 
     from: null, 
     startX: 0, 
@@ -104,7 +102,6 @@ export function ChessBoard({
     isDragging: false 
   });
   const boardRef = useRef<HTMLDivElement>(null);
-  const prevFenRef = useRef<string>(fen);
   const dragStartTimeRef = useRef<number>(0);
   
   const chess = useMemo(() => new Chess(fen), [fen]);
@@ -117,77 +114,6 @@ export function ChessBoard({
       return () => clearTimeout(timeout);
     }
   }, [wrongMove]);
-
-  // Animating piece info
-  const [animatingPiece, setAnimatingPiece] = useState<{ type: string; color: string } | null>(null);
-  // Whether the ghost is in its "start" position (source square) or animating to destination
-  const [animPhase, setAnimPhase] = useState<'from' | 'to'>('from');
-  const rafRef = useRef<number | null>(null);
-
-  // Detect FEN change and trigger animation
-  useEffect(() => {
-    if (prevFenRef.current === fen) return;
-
-    try {
-      const prevChess = new Chess(prevFenRef.current);
-
-      let fromSquare: string | null = null;
-      let toSquare: string | null = null;
-      let movedPiece: { type: string; color: string } | null = null;
-
-      for (const file of FILES) {
-        for (const rank of RANKS) {
-          const square = `${file}${rank}`;
-          const prevPiece = prevChess.get(square);
-          const currPiece = chess.get(square);
-
-          if (prevPiece && !currPiece) {
-            fromSquare = square;
-            movedPiece = { type: prevPiece.type, color: prevPiece.color };
-          }
-          if (currPiece && !prevPiece) {
-            toSquare = square;
-          }
-        }
-      }
-
-      if (fromSquare && toSquare && movedPiece) {
-        // Cancel any in-flight animation
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-
-        // Phase 1: render ghost at source (no transition yet)
-        setAnimatingFrom(fromSquare);
-        setAnimatingTo(toSquare);
-        setAnimatingPiece(movedPiece);
-        setAnimPhase('from');
-
-        // Phase 2: on the next frame, flip to 'to' — browser will CSS-transition from→to
-        rafRef.current = requestAnimationFrame(() => {
-          rafRef.current = requestAnimationFrame(() => {
-            setAnimPhase('to');
-          });
-        });
-
-        // Clear after animation finishes (duration 250ms + small buffer)
-        const timeout = setTimeout(() => {
-          setAnimatingFrom(null);
-          setAnimatingTo(null);
-          setAnimatingPiece(null);
-          setAnimPhase('from');
-          prevFenRef.current = fen;
-        }, 320);
-
-        return () => {
-          clearTimeout(timeout);
-          if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        };
-      } else {
-        prevFenRef.current = fen;
-      }
-    } catch {
-      prevFenRef.current = fen;
-    }
-  }, [fen, chess]);
 
   // Get legal moves
   const legalMoves = useMemo(() => {
@@ -553,10 +479,7 @@ export function ChessBoard({
             const url = PIECE_URLS[pieceKey];
             const isDraggingPiece = dragState.isDragging && dragState.from === pos.square;
             
-            // Hide piece at destination during animation (the ghost piece will animate there)
-            const isAtAnimationDestination = animatingTo === pos.square && animatingPiece;
-
-            if (!url || isAtAnimationDestination) return null;
+            if (!url) return null;
 
             // pos.x and pos.y are 0–7 grid indices. Convert to CSS % (each square = 12.5%)
             let cssLeft = `${pos.x * 12.5}%`;
@@ -602,47 +525,7 @@ export function ChessBoard({
             );
           })}
 
-          {/* Animated ghost piece — starts at source square, transitions to destination */}
-          {animatingFrom && animatingTo && animatingPiece && (() => {
-            const pieceKey = `${animatingPiece.color}${animatingPiece.type.toUpperCase()}`;
-            const url = PIECE_URLS[pieceKey];
-            if (!url) return null;
 
-            const fromCoords = squareToCoords(animatingFrom, orientation);
-            const toCoords   = squareToCoords(animatingTo,   orientation);
-
-            // Phase 'from': ghost sits at source with no transition (instant placement)
-            // Phase 'to':   transition kicks in and slides it to the destination
-            const currentCoords = animPhase === 'from' ? fromCoords : toCoords;
-
-            return (
-              <div
-                key="animating-piece"
-                className="absolute p-0.5"
-                style={{
-                  left: `${currentCoords.x * 12.5}%`,
-                  top:  `${currentCoords.y * 12.5}%`,
-                  width: '12.5%',
-                  height: '12.5%',
-                  zIndex: 50,
-                  pointerEvents: 'none',
-                  // Transition only during the 'to' phase so the first render is instant
-                  transition: animPhase === 'to'
-                    ? 'left 250ms cubic-bezier(0.25, 0.1, 0.25, 1), top 250ms cubic-bezier(0.25, 0.1, 0.25, 1)'
-                    : 'none',
-                  willChange: 'left, top',
-                }}
-              >
-                <img
-                  src={url}
-                  alt="moving piece"
-                  className="w-full h-full select-none"
-                  draggable={false}
-                  style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.35))' }}
-                />
-              </div>
-            );
-          })()}
         </div>
       </div>
     </div>

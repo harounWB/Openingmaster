@@ -63,7 +63,7 @@ export default function SupportPage() {
                 <img
                   src={crypto.icon}
                   alt={crypto.name}
-                  className="w-6 h-6 flex-shrink-0 object-contain"
+                  className="w-8 h-8 flex-shrink-0 object-contain"
                   loading="lazy"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"%3E%3Ccircle cx="12" cy="12" r="10"/%3E%3C/svg%3E';

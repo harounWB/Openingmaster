@@ -91,33 +91,44 @@ export function TrainingPanel({
           </Button>
         </div>
 
-        {/* Player Color Selection */}
-        <div className="flex gap-2">
+        {/* Color Selection: Flip Board in explore, Play White/Black in train */}
+        {trainingMode === 'explore' ? (
           <Button
             size="sm"
-            variant={playerColor === 'w' ? 'default' : 'outline'}
-            onClick={() => onColorChange('w')}
-            className={
-              playerColor === 'w'
-                ? 'bg-blue-600 hover:bg-blue-700'
-                : 'bg-gray-800 hover:bg-gray-700'
-            }
+            variant="outline"
+            onClick={() => onColorChange(playerColor === 'w' ? 'b' : 'w')}
+            className="bg-gray-800 hover:bg-gray-700 w-full"
           >
-            Play White
+            Flip Board
           </Button>
-          <Button
-            size="sm"
-            variant={playerColor === 'b' ? 'default' : 'outline'}
-            onClick={() => onColorChange('b')}
-            className={
-              playerColor === 'b'
-                ? 'bg-blue-600 hover:bg-blue-700'
-                : 'bg-gray-800 hover:bg-gray-700'
-            }
-          >
-            Play Black
-          </Button>
-        </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={playerColor === 'w' ? 'default' : 'outline'}
+              onClick={() => onColorChange('w')}
+              className={
+                playerColor === 'w'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-gray-800 hover:bg-gray-700'
+              }
+            >
+              Play White
+            </Button>
+            <Button
+              size="sm"
+              variant={playerColor === 'b' ? 'default' : 'outline'}
+              onClick={() => onColorChange('b')}
+              className={
+                playerColor === 'b'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-gray-800 hover:bg-gray-700'
+              }
+            >
+              Play Black
+            </Button>
+          </div>
+        )}
 
         {/* Difficulty Level Selection - Only show in train mode */}
         {trainingMode === 'train' && onDifficultyChange && (

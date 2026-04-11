@@ -81,7 +81,8 @@ export function ChessBoard({
   wrongMoveSquares = null,
   correctMoveSquares = null,
   draggable = true,
-}: ChessBoardProps) {
+  freeMove = false,
+}: ChessBoardProps & { freeMove?: boolean }) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [shakeBoard, setShakeBoard] = useState(false);
 
@@ -173,9 +174,9 @@ export function ChessBoard({
         return;
       }
 
-      // Select a piece
+      // Select a piece — in freeMove mode either color can be picked up
       const piece = chess.get(square);
-      if (piece && piece.color === chess.turn()) {
+      if (piece && (freeMove || piece.color === chess.turn())) {
         setSelectedSquare(square);
         return;
       }
@@ -191,14 +192,14 @@ export function ChessBoard({
     (e: React.MouseEvent, square: string) => {
       if (disabled || !draggable) return;
       const piece = chess.get(square);
-      if (!piece || piece.color !== chess.turn()) return;
+      if (!piece || (!freeMove && piece.color !== chess.turn())) return;
       if (!legalMoves[square]?.length) return;
 
       // Record the potential drag start — don't commit yet
       pendingDragRef.current = { from: square, startX: e.clientX, startY: e.clientY };
       e.preventDefault();
     },
-    [disabled, draggable, chess, legalMoves]
+    [disabled, draggable, chess, legalMoves, freeMove]
   );
 
   const handleMouseMove = useCallback(
@@ -247,14 +248,14 @@ export function ChessBoard({
     (e: React.TouchEvent, square: string) => {
       if (disabled || !draggable) return;
       const piece = chess.get(square);
-      if (!piece || piece.color !== chess.turn()) return;
+      if (!piece || (!freeMove && piece.color !== chess.turn())) return;
       if (!legalMoves[square]?.length) return;
 
       const t = e.touches[0];
       pendingDragRef.current = { from: square, startX: t.clientX, startY: t.clientY };
       e.preventDefault();
     },
-    [disabled, draggable, chess, legalMoves]
+    [disabled, draggable, chess, legalMoves, freeMove]
   );
 
   const handleTouchMove = useCallback(

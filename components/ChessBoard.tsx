@@ -118,6 +118,9 @@ export function ChessBoard({
     }
   }, [wrongMove]);
 
+  // Track the animating piece info (type/color) so we can render a "ghost" during animation
+  const [animatingPiece, setAnimatingPiece] = useState<{ type: string; color: string } | null>(null);
+
   // Detect FEN change and trigger animation
   useEffect(() => {
     if (prevFenRef.current === fen) return;
@@ -127,6 +130,7 @@ export function ChessBoard({
       
       let fromSquare: string | null = null;
       let toSquare: string | null = null;
+      let movedPiece: { type: string; color: string } | null = null;
 
       for (const file of FILES) {
         for (const rank of RANKS) {
@@ -134,25 +138,31 @@ export function ChessBoard({
           const prevPiece = prevChess.get(square);
           const currPiece = chess.get(square);
 
+          // Piece disappeared from this square (source)
           if (prevPiece && !currPiece) {
             fromSquare = square;
+            movedPiece = { type: prevPiece.type, color: prevPiece.color };
           }
 
+          // Piece appeared on this square (destination)
           if (currPiece && !prevPiece) {
             toSquare = square;
           }
         }
       }
 
-      if (fromSquare && toSquare) {
+      if (fromSquare && toSquare && movedPiece) {
         setAnimatingFrom(fromSquare);
         setAnimatingTo(toSquare);
+        setAnimatingPiece(movedPiece);
 
+        // After animation completes, clear state
         const timeout = setTimeout(() => {
           setAnimatingFrom(null);
           setAnimatingTo(null);
+          setAnimatingPiece(null);
           prevFenRef.current = fen;
-        }, 250);
+        }, 200);
 
         return () => clearTimeout(timeout);
       } else {
@@ -525,33 +535,27 @@ export function ChessBoard({
           {piecePositions.map((pos) => {
             const pieceKey = `${pos.piece.color}${pos.piece.type.toUpperCase()}`;
             const url = PIECE_URLS[pieceKey];
-
-            const isMovingPiece = animatingFrom === pos.square;
             const isDraggingPiece = dragState.isDragging && dragState.from === pos.square;
+            
+            // Hide piece at destination during animation (the ghost piece will animate there)
+            const isAtAnimationDestination = animatingTo === pos.square && animatingPiece;
 
-            if (!url) return null;
-
-            const toCoords = animatingTo ? squareToCoords(animatingTo, orientation) : null;
+            if (!url || isAtAnimationDestination) return null;
 
             // pos.x and pos.y are 0–7 grid indices. Convert to CSS % (each square = 12.5%)
             let cssLeft = `${pos.x * 12.5}%`;
             let cssTop  = `${pos.y * 12.5}%`;
 
             if (isDraggingPiece && boardRef.current) {
-              // Center the piece under the cursor (subtract half a square so it's centred)
               const boardRect = boardRef.current.getBoundingClientRect();
               const squareSize = boardRect.width / 8;
               const halfSquare = squareSize / 2;
               const rawLeft = dragState.currentX - boardRect.left - halfSquare;
               const rawTop  = dragState.currentY - boardRect.top  - halfSquare;
-              // Clamp so the piece stays inside the board visually
               const clampedLeft = Math.max(0, Math.min(boardRect.width  - squareSize, rawLeft));
               const clampedTop  = Math.max(0, Math.min(boardRect.height - squareSize, rawTop));
               cssLeft = `${clampedLeft}px`;
               cssTop  = `${clampedTop}px`;
-            } else if (isMovingPiece && toCoords) {
-              cssLeft = `${toCoords.x * 12.5}%`;
-              cssTop  = `${toCoords.y * 12.5}%`;
             }
 
             return (
@@ -563,9 +567,7 @@ export function ChessBoard({
                   top: cssTop,
                   width: '12.5%',
                   height: '12.5%',
-                  transition: isMovingPiece && !isDraggingPiece
-                    ? 'left 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                    : 'none',
+                  transition: 'none',
                   transform: isDraggingPiece ? 'scale(1.15)' : 'scale(1)',
                   filter: isDraggingPiece
                     ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.5))'
@@ -583,6 +585,45 @@ export function ChessBoard({
               </div>
             );
           })}
+
+          {/* Animated ghost piece - slides from source to destination */}
+          {animatingFrom && animatingTo && animatingPiece && (() => {
+            const pieceKey = `${animatingPiece.color}${animatingPiece.type.toUpperCase()}`;
+            const url = PIECE_URLS[pieceKey];
+            if (!url) return null;
+
+            const fromCoords = squareToCoords(animatingFrom, orientation);
+            const toCoords = squareToCoords(animatingTo, orientation);
+
+            return (
+              <div
+                key="animating-piece"
+                className="absolute p-0.5 piece-animating"
+                style={{
+                  left: `${toCoords.x * 12.5}%`,
+                  top: `${toCoords.y * 12.5}%`,
+                  width: '12.5%',
+                  height: '12.5%',
+                  zIndex: 50,
+                  pointerEvents: 'none',
+                  // Start from source position via CSS custom properties
+                  '--from-left': `${fromCoords.x * 12.5}%`,
+                  '--from-top': `${fromCoords.y * 12.5}%`,
+                  '--to-left': `${toCoords.x * 12.5}%`,
+                  '--to-top': `${toCoords.y * 12.5}%`,
+                  animation: 'pieceSlide 180ms cubic-bezier(0.2, 0, 0, 1) forwards',
+                } as React.CSSProperties}
+              >
+                <img
+                  src={url}
+                  alt="moving piece"
+                  className="w-full h-full select-none"
+                  draggable={false}
+                  style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }}
+                />
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

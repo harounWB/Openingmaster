@@ -81,8 +81,7 @@ export function ChessBoard({
   wrongMoveSquares = null,
   correctMoveSquares = null,
   draggable = true,
-  freeMove = false,
-}: ChessBoardProps & { freeMove?: boolean }) {
+}: ChessBoardProps) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [shakeBoard, setShakeBoard] = useState(false);
 
@@ -174,9 +173,10 @@ export function ChessBoard({
         return;
       }
 
-      // Select a piece — in freeMove mode either color can be picked up
+      // Select a piece — STRICT turn-based logic
+      // Only the side to move can pick up their pieces
       const piece = chess.get(square);
-      if (piece && (freeMove || piece.color === chess.turn())) {
+      if (piece && piece.color === chess.turn()) {
         setSelectedSquare(square);
         return;
       }
@@ -184,7 +184,7 @@ export function ChessBoard({
       // Clicked on an empty or opponent square with nothing selected
       setSelectedSquare(null);
     },
-    [selectedSquare, chess, disabled, legalMoves, tryMove, freeMove]
+    [selectedSquare, chess, disabled, legalMoves, tryMove]
   );
 
   // ─── DRAG (MOUSE) ─────────────────────────────────────────────────────────
@@ -192,14 +192,15 @@ export function ChessBoard({
     (e: React.MouseEvent, square: string) => {
       if (disabled || !draggable) return;
       const piece = chess.get(square);
-      if (!piece || (!freeMove && piece.color !== chess.turn())) return;
+      // STRICT: Only allow dragging pieces of the side to move
+      if (!piece || piece.color !== chess.turn()) return;
       if (!legalMoves[square]?.length) return;
 
       // Record the potential drag start — don't commit yet
       pendingDragRef.current = { from: square, startX: e.clientX, startY: e.clientY };
       e.preventDefault();
     },
-    [disabled, draggable, chess, legalMoves, freeMove]
+    [disabled, draggable, chess, legalMoves]
   );
 
   const handleMouseMove = useCallback(
@@ -248,14 +249,15 @@ export function ChessBoard({
     (e: React.TouchEvent, square: string) => {
       if (disabled || !draggable) return;
       const piece = chess.get(square);
-      if (!piece || (!freeMove && piece.color !== chess.turn())) return;
+      // STRICT: Only allow dragging pieces of the side to move
+      if (!piece || piece.color !== chess.turn()) return;
       if (!legalMoves[square]?.length) return;
 
       const t = e.touches[0];
       pendingDragRef.current = { from: square, startX: t.clientX, startY: t.clientY };
       e.preventDefault();
     },
-    [disabled, draggable, chess, legalMoves, freeMove]
+    [disabled, draggable, chess, legalMoves]
   );
 
   const handleTouchMove = useCallback(
@@ -424,6 +426,8 @@ export function ChessBoard({
             if (!url) return null;
 
             const isDragging = dragState?.from === pos.square;
+            // Piece is disabled if it's not the side to move
+            const isDisabled = pos.piece.color !== chess.turn();
 
             let cssLeft = `${pos.x * 12.5}%`;
             let cssTop  = `${pos.y * 12.5}%`;
@@ -452,7 +456,8 @@ export function ChessBoard({
                     ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.45))'
                     : 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))',
                   zIndex: isDragging ? 100 : 10,
-                  opacity: isDragging ? 1 : 1,
+                  opacity: isDragging ? 1 : (isDisabled ? 0.5 : 1),
+                  cursor: isDisabled ? 'default' : 'grab',
                 }}
               >
                 <img

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Game } from '@/lib/types';
 
 interface MovesPanelProps {
@@ -19,6 +19,30 @@ export function MovesPanel({
   playerColor,
 }: MovesPanelProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const currentMoveRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll the moves list to keep the current move visible
+  useEffect(() => {
+    if (!currentMoveRef.current || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const el = currentMoveRef.current;
+
+    // getBoundingClientRect gives positions relative to the viewport
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+
+    const isAbove = elRect.top < containerRect.top + 40;
+    const isBelow = elRect.bottom > containerRect.bottom - 40;
+
+    if (isAbove || isBelow) {
+      // Scroll so the current move is centred inside the panel
+      container.scrollTo({
+        top: container.scrollTop + (elRect.top - containerRect.top) - container.clientHeight / 2 + el.offsetHeight / 2,
+        behavior: 'smooth',
+      });
+    }
+  }, [moveIndex]);
 
   const handleMoveClick = (index: number) => {
     onNavigateMove(index);
@@ -74,6 +98,7 @@ export function MovesPanel({
             return (
               <div 
                 key={item.index}
+                ref={isCurrentMove ? currentMoveRef : null}
                 className="group"
               >
                 {/* Move row */}

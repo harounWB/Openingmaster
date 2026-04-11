@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { CRYPTO_DATA, CryptoKey } from '@/lib/cryptoData';
 import { LTCIcon, USDTIcon, SOLIcon, BNBIcon } from '@/components/CryptoIcons';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Check } from 'lucide-react';
 
 const ICON_MAP = {
@@ -137,11 +137,11 @@ export default function SupportPage() {
 
               {/* QR Code */}
               <div className="flex justify-center mb-6 p-4 bg-white rounded-lg">
-                <QRCode
+                <QRCodeSVG
                   value={selectedNetworkData.address}
                   size={200}
                   level="H"
-                  includeMargin={true}
+                  marginSize={2}
                   fgColor="#000000"
                   bgColor="#FFFFFF"
                 />

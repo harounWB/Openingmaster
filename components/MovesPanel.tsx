@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Game } from '@/lib/types';
 
 interface MovesPanelProps {
@@ -19,6 +19,28 @@ export function MovesPanel({
   playerColor,
 }: MovesPanelProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const currentMoveRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll the moves list to keep the current move visible — explore mode only
+  useEffect(() => {
+    if (trainingMode !== 'explore') return;
+    if (!currentMoveRef.current || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const el = currentMoveRef.current;
+    const elTop = el.offsetTop - container.offsetTop;
+    const elBottom = elTop + el.offsetHeight;
+    const visibleTop = container.scrollTop;
+    const visibleBottom = visibleTop + container.clientHeight;
+
+    // Only scroll if the current move is outside the visible area
+    if (elTop < visibleTop + 40 || elBottom > visibleBottom - 40) {
+      container.scrollTo({
+        top: elTop - container.clientHeight / 2 + el.offsetHeight / 2,
+        behavior: 'smooth',
+      });
+    }
+  }, [moveIndex, trainingMode]);
 
   const handleMoveClick = (index: number) => {
     onNavigateMove(index);
@@ -74,6 +96,7 @@ export function MovesPanel({
             return (
               <div 
                 key={item.index}
+                ref={isCurrentMove ? currentMoveRef : null}
                 className="group"
               >
                 {/* Move row */}

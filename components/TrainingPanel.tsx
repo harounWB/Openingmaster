@@ -203,8 +203,8 @@ export function TrainingPanel({
           </Button>
         </div>
 
-        {/* Move History */}
-        {game.moves.length > 0 && (
+        {/* Move History - Only show in explore mode */}
+        {game.moves.length > 0 && trainingMode === 'explore' && (
           <div className="mt-4 p-2 bg-gray-800 rounded border border-gray-700">
             <div className="text-xs text-gray-400 mb-2">Moves:</div>
             <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">

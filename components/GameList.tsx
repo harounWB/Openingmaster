@@ -3,7 +3,6 @@
 import React from 'react';
 import { Game } from '@/lib/types';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 
 interface GameListProps {
   games: Game[];
@@ -19,35 +18,62 @@ export function GameList({
   completedGames,
 }: GameListProps) {
   return (
-    <Card className="p-4 bg-gray-900 border-gray-800 h-fit">
-      <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-gray-200">Games ({games.length})</h3>
-        <div className="space-y-1 max-h-96 overflow-y-auto">
+    <Card className="p-4 bg-gray-900/80 border-gray-800 h-fit backdrop-blur-sm">
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Games ({games.length})
+        </h3>
+        <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
           {games.length === 0 ? (
-            <p className="text-xs text-gray-500">No games loaded</p>
+            <p className="text-sm text-gray-500 py-4 text-center">No games loaded</p>
           ) : (
-            games.map((game) => (
-              <Button
-                key={game.id}
-                onClick={() => onSelectGame(game)}
-                variant="ghost"
-                className={`w-full justify-start text-left text-xs px-3 py-2 h-auto ${
-                  selectedGame?.id === game.id
-                    ? 'bg-purple-900 text-purple-100'
-                    : 'text-gray-300 hover:bg-gray-800'
-                }`}
-              >
-                <div className="flex items-center gap-2 flex-1">
-                  {completedGames.has(game.id) && (
-                    <span className="text-green-400">✔</span>
-                  )}
-                  <div className="flex-1">
-                    <div className="font-medium">{game.white}</div>
-                    <div className="text-gray-500">vs {game.black}</div>
+            games.map((game, index) => {
+              const isSelected = selectedGame?.id === game.id;
+              const isCompleted = completedGames.has(game.id);
+              
+              return (
+                <button
+                  key={game.id}
+                  onClick={() => onSelectGame(game)}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 group ${
+                    isSelected
+                      ? 'bg-purple-600/90 text-white shadow-lg shadow-purple-500/20 ring-1 ring-purple-400/50'
+                      : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/80 hover:scale-[1.01]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    {/* Game number */}
+                    <span className={`text-xs font-mono min-w-[20px] ${
+                      isSelected ? 'text-purple-200' : 'text-gray-500'
+                    }`}>
+                      {index + 1}.
+                    </span>
+                    
+                    {/* Game info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm truncate">{game.white}</span>
+                        {isCompleted && (
+                          <span className="text-green-400 text-xs flex-shrink-0">✔</span>
+                        )}
+                      </div>
+                      <div className={`text-xs truncate ${
+                        isSelected ? 'text-purple-200' : 'text-gray-500'
+                      }`}>
+                        vs {game.black}
+                      </div>
+                    </div>
+                    
+                    {/* Move count */}
+                    <span className={`text-xs ${
+                      isSelected ? 'text-purple-200' : 'text-gray-500'
+                    }`}>
+                      {game.moves.length} moves
+                    </span>
                   </div>
-                </div>
-              </Button>
-            ))
+                </button>
+              );
+            })
           )}
         </div>
       </div>

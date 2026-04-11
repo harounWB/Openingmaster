@@ -4,7 +4,6 @@ import React from 'react';
 import { Game, PlayerColor, TrainingMode } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { THEME_COLORS } from '@/lib/constants';
 
 interface TrainingPanelProps {
   game: Game;

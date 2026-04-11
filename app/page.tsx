@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PGNUpload } from '@/components/PGNUpload';
 import { Trainer } from '@/components/Trainer';
 import { Game } from '@/lib/types';
+import { BookOpen, Upload } from 'lucide-react';
 
 export default function Page() {
   const [games, setGames] = useState<Game[]>([]);
@@ -14,42 +15,52 @@ export default function Page() {
     setTimeout(() => {
       setGames(loadedGames);
       setIsLoading(false);
-    }, 500);
+    }, 300);
   };
+
+  const totalMoves = games.reduce((sum, g) => sum + g.moves.length, 0);
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="space-y-8">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold text-purple-400">Chess Opening Trainer</h1>
-            <p className="text-gray-400">Master chess openings with interactive training</p>
-          </div>
+          <header className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">Chess Opening Trainer</h1>
+                <p className="text-sm text-gray-500">Master openings with interactive training</p>
+              </div>
+            </div>
+            
+            {games.length > 0 && (
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-300">
+                    {games.length} game{games.length !== 1 ? 's' : ''} · {totalMoves} moves
+                  </div>
+                </div>
+                <button
+                  onClick={() => setGames([])}
+                  className="flex items-center gap-2 text-sm px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-all hover:scale-105"
+                >
+                  <Upload className="w-4 h-4" />
+                  New File
+                </button>
+              </div>
+            )}
+          </header>
 
           {/* Main Content */}
           {games.length === 0 ? (
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto pt-12">
               <PGNUpload onGamesLoaded={handleGamesLoaded} isLoading={isLoading} />
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="text-lg font-semibold text-gray-200">
-                  {games.length} game{games.length !== 1 ? 's' : ''} loaded
-                </div>
-                <button
-                  onClick={() => {
-                    setGames([]);
-                  }}
-                  className="text-sm px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors"
-                >
-                  Load Different File
-                </button>
-              </div>
-
-              <Trainer games={games} />
-            </div>
+            <Trainer games={games} />
           )}
         </div>
       </div>

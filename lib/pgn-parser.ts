@@ -8,48 +8,83 @@ import { Chess } from 'chess.js';
 export function parsePGN(pgnContent: string): Game[] {
   const games: Game[] = [];
   
-  // Split by game headers (lines starting with [)
-  const gameBlocks = pgnContent.split(/\n(?=\[Event|\[White|\[Black|\[Site)/);
+  // Split by game headers - look for [Event or start of file with headers
+  const gameBlocks = splitIntoGameBlocks(pgnContent);
   
   for (const block of gameBlocks) {
     if (!block.trim()) continue;
     
-    const game = parseGameBlock(block);
-    if (game && game.moves.length > 0) {
-      game.id = `game-${games.length + 1}`;
-      games.push(game);
+    try {
+      const game = parseGameBlock(block);
+      if (game && game.moves.length > 0) {
+        game.id = `game-${games.length + 1}`;
+        games.push(game);
+      }
+    } catch (e) {
+      console.warn('[v0] Failed to parse game block:', e);
     }
   }
   
   return games;
 }
 
+function splitIntoGameBlocks(content: string): string[] {
+  const blocks: string[] = [];
+  const lines = content.split('\n');
+  let currentBlock: string[] = [];
+  let inMoves = false;
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    // New game starts with [Event or any header after moves
+    if (trimmed.startsWith('[') && inMoves) {
+      if (currentBlock.length > 0) {
+        blocks.push(currentBlock.join('\n'));
+        currentBlock = [];
+      }
+      inMoves = false;
+    }
+    
+    currentBlock.push(line);
+    
+    // We're in moves section if line doesn't start with [ and isn't empty
+    if (trimmed && !trimmed.startsWith('[')) {
+      inMoves = true;
+    }
+  }
+  
+  if (currentBlock.length > 0) {
+    blocks.push(currentBlock.join('\n'));
+  }
+  
+  return blocks;
+}
+
 function parseGameBlock(blockContent: string): Game | null {
   const lines = blockContent.split('\n');
   
   const headers: Record<string, string> = {};
-  let movesSectionStartIndex = 0;
+  const moveLines: string[] = [];
   
-  // Parse headers
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+  // Parse headers and collect move lines
+  for (const line of lines) {
+    const trimmed = line.trim();
     
-    if (line.startsWith('[')) {
-      const match = line.match(/\[(\w+)\s+"([^"]*)"\]/);
+    if (trimmed.startsWith('[')) {
+      const match = trimmed.match(/\[(\w+)\s+"([^"]*)"\]/);
       if (match) {
         headers[match[1]] = match[2];
       }
-    } else if (line && !line.startsWith('[')) {
-      movesSectionStartIndex = i;
-      break;
+    } else if (trimmed) {
+      moveLines.push(trimmed);
     }
   }
   
-  // Extract moves section
-  const movesContent = lines.slice(movesSectionStartIndex).join(' ');
+  const movesContent = moveLines.join(' ');
   if (!movesContent.trim()) return null;
   
-  // Parse moves with the chess.js library for validation
+  // Parse moves with chess.js validation
   const { moves, variations } = parseMovesWithVariations(movesContent);
   
   if (moves.length === 0) return null;
@@ -67,69 +102,182 @@ function parseGameBlock(blockContent: string): Game | null {
   };
 }
 
+interface Token {
+  type: 'number' | 'comment' | 'move' | 'variation_start' | 'variation_end' | 'result' | 'nag';
+  value: string;
+}
+
+function tokenize(content: string): Token[] {
+  const tokens: Token[] = [];
+  let i = 0;
+  
+  while (i < content.length) {
+    // Skip whitespace
+    while (i < content.length && /\s/.test(content[i])) i++;
+    if (i >= content.length) break;
+    
+    const char = content[i];
+    
+    // Comment in braces
+    if (char === '{') {
+      const end = content.indexOf('}', i);
+      if (end !== -1) {
+        tokens.push({ type: 'comment', value: content.slice(i + 1, end).trim() });
+        i = end + 1;
+        continue;
+      }
+    }
+    
+    // Variation start
+    if (char === '(') {
+      tokens.push({ type: 'variation_start', value: '(' });
+      i++;
+      continue;
+    }
+    
+    // Variation end
+    if (char === ')') {
+      tokens.push({ type: 'variation_end', value: ')' });
+      i++;
+      continue;
+    }
+    
+    // NAG (Numeric Annotation Glyph)
+    if (char === '$') {
+      let nag = '$';
+      i++;
+      while (i < content.length && /\d/.test(content[i])) {
+        nag += content[i];
+        i++;
+      }
+      tokens.push({ type: 'nag', value: nag });
+      continue;
+    }
+    
+    // Move number (e.g., 1. or 1...)
+    if (/\d/.test(char)) {
+      let num = '';
+      while (i < content.length && /\d/.test(content[i])) {
+        num += content[i];
+        i++;
+      }
+      // Skip dots after number
+      while (i < content.length && content[i] === '.') i++;
+      // Skip whitespace after dots
+      while (i < content.length && /\s/.test(content[i])) i++;
+      
+      // Check if this is a result (1-0, 0-1, 1/2-1/2)
+      if (num === '1' && content.slice(i, i + 2) === '-0') {
+        tokens.push({ type: 'result', value: '1-0' });
+        i += 2;
+        continue;
+      }
+      if (num === '0' && content.slice(i, i + 2) === '-1') {
+        tokens.push({ type: 'result', value: '0-1' });
+        i += 2;
+        continue;
+      }
+      if (num === '1' && content.slice(i, i + 6) === '/2-1/2') {
+        tokens.push({ type: 'result', value: '1/2-1/2' });
+        i += 6;
+        continue;
+      }
+      
+      tokens.push({ type: 'number', value: num });
+      continue;
+    }
+    
+    // Result asterisk
+    if (char === '*') {
+      tokens.push({ type: 'result', value: '*' });
+      i++;
+      continue;
+    }
+    
+    // Move (SAN notation)
+    // Castling
+    if (content.slice(i, i + 5) === 'O-O-O' || content.slice(i, i + 5) === '0-0-0') {
+      let move = content.slice(i, i + 5);
+      i += 5;
+      // Check for check/mate symbols
+      while (i < content.length && /[+#!?]/.test(content[i])) {
+        move += content[i];
+        i++;
+      }
+      tokens.push({ type: 'move', value: move.replace(/0/g, 'O') });
+      continue;
+    }
+    if (content.slice(i, i + 3) === 'O-O' || content.slice(i, i + 3) === '0-0') {
+      let move = content.slice(i, i + 3);
+      i += 3;
+      while (i < content.length && /[+#!?]/.test(content[i])) {
+        move += content[i];
+        i++;
+      }
+      tokens.push({ type: 'move', value: move.replace(/0/g, 'O') });
+      continue;
+    }
+    
+    // Regular move
+    if (/[KQRBNP a-h]/.test(char)) {
+      let move = '';
+      // Piece moves or pawn moves
+      while (i < content.length && /[KQRBNPa-h1-8x=+#!?]/.test(content[i])) {
+        move += content[i];
+        i++;
+      }
+      if (move.length > 0) {
+        // Clean up annotation marks for the move token
+        const cleanMove = move.replace(/[!?]/g, '');
+        if (cleanMove.length > 0) {
+          tokens.push({ type: 'move', value: cleanMove });
+        }
+        continue;
+      }
+    }
+    
+    // Skip unknown character
+    i++;
+  }
+  
+  return tokens;
+}
+
 function parseMovesWithVariations(movesContent: string): { moves: Move[]; variations: Variation[] } {
+  const tokens = tokenize(movesContent);
+  const chess = new Chess();
   const moves: Move[] = [];
   const variations: Variation[] = [];
   
-  // Initialize a fresh chess instance for this game
-  const chess = new Chess();
-  
-  // Clean up the moves content - remove line breaks and extra spaces
-  let content = movesContent
-    .replace(/\r\n/g, ' ')
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  // Remove result at the end
-  content = content.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '');
-  
-  // Remove NAGs like $1, $2, etc.
-  content = content.replace(/\$\d+/g, '');
-  
-  // Remove variations (text in parentheses) - handle nested parentheses
-  let prevContent = '';
-  while (prevContent !== content) {
-    prevContent = content;
-    content = content.replace(/\([^()]*\)/g, '');
-  }
-  
-  // Tokenize while preserving comments
-  // This regex captures: move numbers, moves, and comments in braces
-  const tokenRegex = /(\d+\.+)|(\{[^}]*\})|([KQRBNP]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?)|([O0]-[O0](?:-[O0])?[+#]?)/g;
-  
-  const tokens: { type: 'number' | 'comment' | 'move'; value: string }[] = [];
-  let match;
-  
-  while ((match = tokenRegex.exec(content)) !== null) {
-    if (match[1]) {
-      tokens.push({ type: 'number', value: match[1] });
-    } else if (match[2]) {
-      // Extract comment content without braces
-      tokens.push({ type: 'comment', value: match[2].slice(1, -1).trim() });
-    } else if (match[3]) {
-      tokens.push({ type: 'move', value: match[3] });
-    } else if (match[4]) {
-      // Castling - normalize O to standard
-      tokens.push({ type: 'move', value: match[4].replace(/0/g, 'O') });
-    }
-  }
-  
-  // Process tokens - attach comments to the preceding move
   let pendingComment: string | undefined;
+  let variationDepth = 0;
+  let variationTokens: Token[] = [];
   
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     
-    if (token.type === 'number') {
-      continue; // Skip move numbers
+    // Handle variations - skip them for main line but track depth
+    if (token.type === 'variation_start') {
+      variationDepth++;
+      continue;
+    }
+    if (token.type === 'variation_end') {
+      variationDepth--;
+      continue;
     }
     
+    // Skip tokens inside variations
+    if (variationDepth > 0) continue;
+    
+    // Skip move numbers, results, NAGs
+    if (token.type === 'number' || token.type === 'result' || token.type === 'nag') {
+      continue;
+    }
+    
+    // Handle comments
     if (token.type === 'comment') {
-      // Look ahead - if next token is a move, this comment is for that move (pre-comment)
-      // Otherwise attach to previous move
       if (moves.length > 0) {
-        // Attach to the last move
+        // Attach to last move
         const lastMove = moves[moves.length - 1];
         if (lastMove.comment) {
           lastMove.comment += ' ' + token.value;
@@ -137,28 +285,26 @@ function parseMovesWithVariations(movesContent: string): { moves: Move[]; variat
           lastMove.comment = token.value;
         }
       } else {
-        // Store as pending for the first move
-        pendingComment = token.value;
+        // Store for first move
+        pendingComment = pendingComment ? pendingComment + ' ' + token.value : token.value;
       }
       continue;
     }
     
+    // Handle moves
     if (token.type === 'move') {
-      const moveStr = token.value;
-      
       try {
-        const move = chess.move(moveStr, { sloppy: true });
-        if (move) {
+        const result = chess.move(token.value, { sloppy: true });
+        if (result) {
           const moveObj: Move = {
-            notation: moveStr,
-            san: move.san || moveStr,
-            from: move.from,
-            to: move.to,
-            promotion: move.promotion,
+            notation: token.value,
+            san: result.san,
+            from: result.from,
+            to: result.to,
+            promotion: result.promotion,
             comment: pendingComment,
             variations: [],
           };
-          
           moves.push(moveObj);
           pendingComment = undefined;
         }
@@ -169,51 +315,6 @@ function parseMovesWithVariations(movesContent: string): { moves: Move[]; variat
   }
   
   return { moves, variations };
-}
-
-function extractVariationContent(content: string): string | null {
-  let depth = 0;
-  let start = -1;
-  
-  for (let i = 0; i < content.length; i++) {
-    if (content[i] === '(') {
-      if (depth === 0) start = i + 1;
-      depth++;
-    } else if (content[i] === ')') {
-      depth--;
-      if (depth === 0 && start !== -1) {
-        return content.substring(start, i);
-      }
-    }
-  }
-  
-  return null;
-}
-
-function parseMovesFromString(moveString: string, chess: Chess): Move[] {
-  const moves: Move[] = [];
-  const chess_copy = new Chess(chess.fen());
-  
-  const moveMatches = moveString.match(/[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8][+#=]?[qrbn]?|O-O(?:-O)?/g) || [];
-  
-  for (const moveStr of moveMatches) {
-    try {
-      const move = chess_copy.move(moveStr, { sloppy: true });
-      if (move) {
-        moves.push({
-          notation: moveStr,
-          san: move.san || moveStr,
-          from: move.from,
-          to: move.to,
-          promotion: move.promotion,
-        });
-      }
-    } catch (e) {
-      // Skip invalid moves
-    }
-  }
-  
-  return moves;
 }
 
 /**
@@ -228,14 +329,12 @@ export function validateGameMoves(game: Game): boolean {
         from: move.from,
         to: move.to,
         promotion: move.promotion,
-      }, { sloppy: false });
+      });
       
       if (!result) {
-        console.error(`Invalid move: ${move.san} at position ${chess.fen()}`);
         return false;
       }
     } catch (e) {
-      console.error(`Move validation error: ${move.san}`, e);
       return false;
     }
   }

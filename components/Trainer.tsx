@@ -48,7 +48,7 @@ export function Trainer({ games }: TrainerProps) {
 
   // Get current FEN position by replaying moves
   const getCurrentFen = useCallback((): string => {
-    if (!currentGame || !gameState) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    if (!currentGame) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
     const chess = new Chess();
     for (let i = 0; i < moveIndex; i++) {
@@ -60,8 +60,8 @@ export function Trainer({ games }: TrainerProps) {
             to: move.to,
             promotion: move.promotion,
           });
-        } catch (e) {
-          console.error('[v0] Error replaying move:', move, e);
+        } catch {
+          // Skip invalid moves silently
         }
       }
     }
@@ -80,8 +80,8 @@ export function Trainer({ games }: TrainerProps) {
               to: move.to,
               promotion: move.promotion,
             });
-          } catch (e) {
-            console.error('[v0] Error replaying move:', move, e);
+          } catch {
+            // Skip invalid moves
           }
         }
       }

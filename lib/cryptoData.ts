@@ -3,7 +3,7 @@ export const CRYPTO_DATA = {
   LTC: {
     name: 'Litecoin',
     symbol: 'LTC',
-    icon: 'ltc',
+    icon: '/icons/ltc.png',
     networks: {
       LTC: {
         name: 'Litecoin',
@@ -14,7 +14,7 @@ export const CRYPTO_DATA = {
   USDT: {
     name: 'Tether',
     symbol: 'USDT',
-    icon: 'usdt',
+    icon: '/icons/usdt.png',
     networks: {
       TRC20: {
         name: 'TRC20 (TRON)',
@@ -29,7 +29,7 @@ export const CRYPTO_DATA = {
   SOL: {
     name: 'Solana',
     symbol: 'SOL',
-    icon: 'sol',
+    icon: '/icons/sol.png',
     networks: {
       SOL: {
         name: 'Solana',
@@ -44,7 +44,7 @@ export const CRYPTO_DATA = {
   BINANCE: {
     name: 'Binance Pay',
     symbol: 'BINANCE',
-    icon: 'bnb',
+    icon: '/icons/bnb.png',
     networks: {
       BINANCE_ID: {
         name: 'Binance ID',

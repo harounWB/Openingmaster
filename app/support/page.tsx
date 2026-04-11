@@ -2,16 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { CRYPTO_DATA, CryptoKey } from '@/lib/cryptoData';
-import { LTCIcon, USDTIcon, SOLIcon, BNBIcon } from '@/components/CryptoIcons';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Check } from 'lucide-react';
-
-const ICON_MAP = {
-  ltc: LTCIcon,
-  usdt: USDTIcon,
-  sol: SOLIcon,
-  bnb: BNBIcon,
-};
 
 export default function SupportPage() {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoKey | null>(null);
@@ -68,10 +60,12 @@ export default function SupportPage() {
                     : 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800 hover:border-gray-600'
                 }`}
               >
-                {(() => {
-                  const IconComponent = ICON_MAP[crypto.icon as keyof typeof ICON_MAP];
-                  return <IconComponent className="w-6 h-6 flex-shrink-0" />;
-                })()}
+                <img
+                  src={crypto.icon}
+                  alt={crypto.name}
+                  className="w-8 h-8 flex-shrink-0 object-contain"
+                  loading="lazy"
+                />
                 <div className="flex-1 text-left">
                   <div className="font-medium text-white">{crypto.name}</div>
                   <div className="text-sm text-gray-400">{crypto.symbol}</div>

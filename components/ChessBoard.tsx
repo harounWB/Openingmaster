@@ -132,25 +132,23 @@ export function ChessBoard({
         setAnimatingFrom(fromSquare);
         setAnimatingTo(toSquare);
 
-        // Clear animation after 200ms
+        // Clear animation after 250ms (matching CSS transition duration)
         const timeout = setTimeout(() => {
           setAnimatingFrom(null);
           setAnimatingTo(null);
-        }, 200);
+          prevFenRef.current = fen; // Update only after animation completes
+        }, 250);
 
         return () => clearTimeout(timeout);
+      } else {
+        // No movement detected (shouldn't happen in normal play)
+        prevFenRef.current = fen;
       }
     } catch {
       // Silently handle invalid FEN
+      prevFenRef.current = fen;
     }
-
-    prevFenRef.current = fen;
   }, [fen, chess]);
-
-  // Always update prevFenRef
-  useEffect(() => {
-    prevFenRef.current = fen;
-  }, [fen]);
 
   const legalMoves = useMemo(() => {
     const moves: Record<string, string[]> = {};
@@ -451,27 +449,30 @@ export function ChessBoard({
           {piecePositions.map((pos) => {
             const pieceKey = `${pos.piece.color}${pos.piece.type.toUpperCase()}`;
             const url = PIECE_URLS[pieceKey];
-            const fromCoords = animatingFrom ? squareToCoords(animatingFrom, orientation) : null;
-            const toCoords = animatingTo ? squareToCoords(animatingTo, orientation) : null;
-
-            // Check if this piece is animating
-            const isAnimating = animatingFrom && animatingTo && 
-              pos.square === animatingFrom &&
-              fromCoords && toCoords;
-
+            
+            // Check if this piece is currently animating (moving from one square to another)
+            const isMovingPiece = animatingFrom === pos.square;
+            
             if (!url) return null;
+
+            // Get animation target coordinates
+            const toCoords = animatingTo ? squareToCoords(animatingTo, orientation) : null;
+            
+            // Calculate final position: if animating, use target; otherwise use current position
+            const finalX = isMovingPiece && toCoords ? toCoords.x : pos.x;
+            const finalY = isMovingPiece && toCoords ? toCoords.y : pos.y;
 
             return (
               <div
                 key={pos.square}
-                className={`absolute p-0.5 ${isAnimating ? 'transition-all' : ''}`}
+                className={`absolute p-0.5`}
                 style={{
-                  left: `${(isAnimating ? toCoords!.x : pos.x) * 12.5}%`,
-                  top: `${(isAnimating ? toCoords!.y : pos.y) * 12.5}%`,
+                  left: `${finalX * 12.5}%`,
+                  top: `${finalY * 12.5}%`,
                   width: '12.5%',
                   height: '12.5%',
-                  transitionDuration: isAnimating ? '200ms' : '0ms',
-                  transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  // Smooth transition: apply transition only when piece is moving
+                  transition: isMovingPiece ? 'all 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
                 }}
               >
                 <img
@@ -479,6 +480,9 @@ export function ChessBoard({
                   alt={`${pos.piece.color === 'w' ? 'white' : 'black'} ${pos.piece.type}`}
                   className="w-full h-full select-none"
                   draggable={false}
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  }}
                 />
               </div>
             );

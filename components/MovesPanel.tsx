@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Game } from '@/lib/types';
 
 interface MovesPanelProps {
@@ -20,16 +20,41 @@ export function MovesPanel({
 }: MovesPanelProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentMoveRef = useRef<HTMLDivElement>(null);
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-scroll to current move
+  // Handle manual scroll - temporarily disable auto-scroll
+  const handleScroll = () => {
+    setAutoScrollEnabled(false);
+    
+    // Clear existing timeout
+    if (userScrollTimeoutRef.current) {
+      clearTimeout(userScrollTimeoutRef.current);
+    }
+
+    // Re-enable auto-scroll after 2 seconds of inactivity
+    userScrollTimeoutRef.current = setTimeout(() => {
+      setAutoScrollEnabled(true);
+    }, 2000);
+  };
+
+  // Auto-scroll to current move - only in explore mode and when enabled
   useEffect(() => {
+    if (trainingMode !== 'explore' || !autoScrollEnabled) return;
+
     if (currentMoveRef.current && scrollContainerRef.current) {
       currentMoveRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
     }
-  }, [moveIndex]);
+  }, [moveIndex, trainingMode, autoScrollEnabled]);
+
+  // Reset auto-scroll when clicking a move
+  const handleMoveClick = (index: number) => {
+    setAutoScrollEnabled(true);
+    onNavigateMove(index);
+  };
 
   const getDisplayedMoves = () => {
     const moves = [];
@@ -64,9 +89,19 @@ export function MovesPanel({
     return index < moveIndex;
   };
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (userScrollTimeoutRef.current) {
+        clearTimeout(userScrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div 
       ref={scrollContainerRef}
+      onScroll={handleScroll}
       className="h-96 overflow-y-auto rounded-lg border border-gray-800 bg-gray-900/50 p-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
     >
       <div className="space-y-3">
@@ -86,7 +121,7 @@ export function MovesPanel({
               >
                 {/* Move row */}
                 <button
-                  onClick={() => onNavigateMove(item.index + 1)}
+                  onClick={() => handleMoveClick(item.index + 1)}
                   className={`w-full text-left px-4 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 ${
                     isCurrentMove
                       ? 'bg-purple-600/90 text-white shadow-lg shadow-purple-500/20 ring-1 ring-purple-400/50'

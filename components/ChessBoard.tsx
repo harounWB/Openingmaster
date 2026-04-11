@@ -533,13 +533,22 @@ export function ChessBoard({
             let finalX = pos.x;
             let finalY = pos.y;
 
-            if (isMovingPiece && toCoords) {
+            // Priority: dragging takes precedence over animation
+            if (isDraggingPiece && boardRef.current && draggingPieceCoords) {
+              const boardRect = boardRef.current.getBoundingClientRect();
+              const squareSize = boardRect.width / 8;
+              
+              // Calculate which square the piece should be at (0-7 index)
+              const fileIndex = (draggingPieceCoords.x - boardRect.left) / squareSize;
+              const rankIndex = (draggingPieceCoords.y - boardRect.top) / squareSize;
+              
+              // Clamp to board and convert to percentage for positioning
+              finalX = Math.max(0, Math.min(7.5, fileIndex)) / 8;
+              finalY = Math.max(0, Math.min(7.5, rankIndex)) / 8;
+            } else if (isMovingPiece && toCoords) {
+              // If animating (not dragging), move to destination
               finalX = toCoords.x;
               finalY = toCoords.y;
-            } else if (isDraggingPiece && boardRef.current && draggingPieceCoords) {
-              const boardRect = boardRef.current.getBoundingClientRect();
-              finalX = (draggingPieceCoords.x - boardRect.left) / boardRect.width;
-              finalY = (draggingPieceCoords.y - boardRect.top) / boardRect.height;
             }
 
             return (
@@ -547,8 +556,8 @@ export function ChessBoard({
                 key={pos.square}
                 className={`absolute p-0.5 ${isDraggingPiece ? 'piece-dragging' : ''}`}
                 style={{
-                  left: `${finalX * 12.5}%`,
-                  top: `${finalY * 12.5}%`,
+                  left: `${finalX * 100}%`,
+                  top: `${finalY * 100}%`,
                   width: '12.5%',
                   height: '12.5%',
                   transition: isMovingPiece ? 'all 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',

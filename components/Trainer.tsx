@@ -562,7 +562,7 @@ export function Trainer({ games }: TrainerProps) {
                 wrongMove={isCorrect === false}
                 wrongMoveSquares={wrongMoveSquares}
                 correctMoveSquares={correctMoveSquares}
-                draggable={trainingMode === 'explore'}
+                draggable={true}
               />
             ) : (
               <div className="w-full max-w-md aspect-square bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">

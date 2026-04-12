@@ -266,7 +266,8 @@ export function Trainer({ games }: TrainerProps) {
           setIsCorrect(true);
           setHintLevel(0);
           setShowMoveComment(true);
-          // Don't set highlight yet - it will be set after the FEN updates
+          // Update highlight at same time as move (in same state batch)
+          setCorrectMoveSquares({ from: move.from, to: move.to });
           
           const attemptIndex = moveAttempts.findIndex(a => a.moveIndex === moveIndex);
           if (attemptIndex === -1) {
@@ -287,13 +288,13 @@ export function Trainer({ games }: TrainerProps) {
             if (opponentIndex > newIndex) {
               setMoveIndex(newIndex);
               setMessage('Correct!');
-              // Apply highlight after move completes (~150ms for animation)
+              
+              // Clear highlight after animation duration
               setTimeout(() => {
-                setCorrectMoveSquares({ from: move.from, to: move.to });
-                setTimeout(() => {
-                  setCorrectMoveSquares(null);
-                }, 300);
-              }, 150);
+                setCorrectMoveSquares(null);
+              }, 300);
+              
+              // After opponent move completes, update board state
               setTimeout(() => {
                 setMoveIndex(opponentIndex);
                 setShowMoveComment(false);
@@ -317,13 +318,11 @@ export function Trainer({ games }: TrainerProps) {
           }
           
           setMoveIndex(newIndex);
-          // Apply highlight after move completes
+          
+          // Clear highlight after animation duration
           setTimeout(() => {
-            setCorrectMoveSquares({ from: move.from, to: move.to });
-            setTimeout(() => {
-              setCorrectMoveSquares(null);
-            }, 300);
-          }, 150);
+            setCorrectMoveSquares(null);
+          }, 300);
           
           if (newIndex >= currentGame.moves.length) {
             if (currentSession) {

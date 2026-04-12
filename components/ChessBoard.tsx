@@ -285,7 +285,7 @@ export function ChessBoard({
   const chess = chessRef.current;
 
   // Responsive board size
-  const [boardSize, setBoardSize] = useState(400);
+  const [boardSize, setBoardSize] = useState(480);
   const squareSize = boardSize / 8;
   const pieceSize = squareSize * 0.85;
 
@@ -295,18 +295,18 @@ export function ChessBoard({
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       
-      // Mobile: 90% of viewport width, max 500px
-      // Desktop: larger, max 600px
+      // Mobile: 95% of viewport width, max 560px
+      // Desktop: larger, max 700px
       let size: number;
       if (vw < 768) {
-        size = Math.min(vw * 0.9, vh * 0.5, 500);
+        size = Math.min(vw * 0.95, vh * 0.55, 560);
       } else {
-        size = Math.min(vw * 0.45, vh * 0.7, 600);
+        size = Math.min(vw * 0.5, vh * 0.75, 700);
       }
       
       // Ensure it's divisible by 8 for clean squares
       size = Math.floor(size / 8) * 8;
-      setBoardSize(Math.max(280, size));
+      setBoardSize(Math.max(320, size));
     };
 
     updateSize();

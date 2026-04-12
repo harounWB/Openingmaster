@@ -322,6 +322,7 @@ export function ChessBoard({
         style={{ 
           width: `${boardSize}px`, 
           height: `${boardSize}px`,
+          touchAction: 'none',
         }}
       >
         {squares.map((square) => {

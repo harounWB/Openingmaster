@@ -26,6 +26,7 @@ export function Trainer({ games }: TrainerProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [completedGames, setCompletedGames] = useState<Set<string>>(new Set());
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2>(0);
+  const [hintUsedCount, setHintUsedCount] = useState(0); // Track hint usage
   const [showMoveComment, setShowMoveComment] = useState(false);
   const [wrongMoveSquares, setWrongMoveSquares] = useState<{ from: string; to: string } | null>(null);
   const [correctMoveSquares, setCorrectMoveSquares] = useState<{ from: string; to: string } | null>(null);
@@ -53,6 +54,7 @@ export function Trainer({ games }: TrainerProps) {
       setGameState(chess);
       setIsCorrect(null);
       setHintLevel(0);
+      setHintUsedCount(0); // Reset hint counter on new game
       setShowMoveComment(false);
       setMoveAttempts([]);
       setSessionComplete(false);
@@ -176,15 +178,37 @@ export function Trainer({ games }: TrainerProps) {
   }, [currentGame, moveIndex]);
 
   const handleHint = useCallback(() => {
-    if (hintLevel < 2) {
-      setHintLevel((prev) => Math.min(2, prev + 1) as 0 | 1 | 2);
+    // EASY MODE: Unlimited, level 0→piece, level 1→destination
+    if (difficulty === 'easy') {
+      if (hintLevel < 2) {
+        setHintLevel((prev) => Math.min(2, prev + 1) as 0 | 1 | 2);
+        if (hintLevel === 0) {
+          setMessage('Hint: The highlighted square shows the piece to move.');
+        } else if (hintLevel === 1) {
+          setMessage('Hint: Move to the highlighted destination.');
+        }
+      }
+      return;
+    }
+    
+    // MEDIUM MODE: Unlimited, only show piece (hintLevel stays 1)
+    if (difficulty === 'medium') {
       if (hintLevel === 0) {
+        setHintLevel(1);
         setMessage('Hint: The highlighted square shows the piece to move.');
-      } else if (hintLevel === 1) {
-        setMessage('Hint: Move to the highlighted destination.');
+      }
+      return;
+    }
+    
+    // HARD MODE: Only one usage total
+    if (difficulty === 'hard') {
+      if (hintUsedCount === 0) {
+        setHintLevel(1);
+        setHintUsedCount(1); // Mark as used
+        setMessage('Hint: The highlighted square shows the piece to move. (Last hint)');
       }
     }
-  }, [hintLevel]);
+  }, [difficulty, hintLevel, hintUsedCount]);
 
   const playOpponentMove = useCallback((currentMoveIndex: number): number => {
     if (!currentGame) return currentMoveIndex;
@@ -242,7 +266,7 @@ export function Trainer({ games }: TrainerProps) {
           setIsCorrect(true);
           setHintLevel(0);
           setShowMoveComment(true);
-          setCorrectMoveSquares({ from: move.from, to: move.to });
+          // Don't set highlight yet - it will be set after the FEN updates
           
           const attemptIndex = moveAttempts.findIndex(a => a.moveIndex === moveIndex);
           if (attemptIndex === -1) {
@@ -256,10 +280,6 @@ export function Trainer({ games }: TrainerProps) {
             });
           }
           
-          setTimeout(() => {
-            setCorrectMoveSquares(null);
-          }, 300);
-          
           let newIndex = moveIndex + 1;
           
           if (newIndex < currentGame.moves.length) {
@@ -267,6 +287,13 @@ export function Trainer({ games }: TrainerProps) {
             if (opponentIndex > newIndex) {
               setMoveIndex(newIndex);
               setMessage('Correct!');
+              // Apply highlight after move completes (~150ms for animation)
+              setTimeout(() => {
+                setCorrectMoveSquares({ from: move.from, to: move.to });
+                setTimeout(() => {
+                  setCorrectMoveSquares(null);
+                }, 300);
+              }, 150);
               setTimeout(() => {
                 setMoveIndex(opponentIndex);
                 setShowMoveComment(false);
@@ -290,6 +317,14 @@ export function Trainer({ games }: TrainerProps) {
           }
           
           setMoveIndex(newIndex);
+          // Apply highlight after move completes
+          setTimeout(() => {
+            setCorrectMoveSquares({ from: move.from, to: move.to });
+            setTimeout(() => {
+              setCorrectMoveSquares(null);
+            }, 300);
+          }, 150);
+          
           if (newIndex >= currentGame.moves.length) {
             if (currentSession) {
               setCurrentSession({
@@ -599,11 +634,18 @@ export function Trainer({ games }: TrainerProps) {
                       variant="ghost"
                       size="sm"
                       onClick={handleHint}
-                      disabled={hintLevel >= 2}
+                      disabled={
+                        difficulty === 'easy' ? hintLevel >= 2 :
+                        difficulty === 'medium' ? hintLevel >= 1 :
+                        hintUsedCount >= 1
+                      }
                       className={`text-gray-400 hover:text-amber-400 hover:bg-amber-900/30 h-8 px-3 gap-1.5 ${
                         hintLevel > 0 ? 'text-amber-400 bg-amber-900/20' : ''
                       }`}
-                      title={hintLevel === 0 ? 'Get a hint' : hintLevel === 1 ? 'Show destination' : 'Hint active'}
+                      title={
+                        difficulty === 'hard' && hintUsedCount >= 1 ? 'Hint already used' :
+                        hintLevel === 0 ? 'Get a hint' : 'Hint active'
+                      }
                     >
                       <Lightbulb className="h-4 w-4" />
                       <span className="text-xs">Hint</span>

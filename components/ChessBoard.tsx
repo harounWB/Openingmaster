@@ -91,34 +91,22 @@ export function ChessBoard({
   // Handle piece drop (drag and drop)
   const onPieceDrop = useCallback(
     (sourceSquare: Square, targetSquare: Square, piece: string): boolean => {
-      console.log('[v0] onPieceDrop:', { sourceSquare, targetSquare, piece, disabled, playerColor, turn: chess.turn(), orientation });
-      
       if (disabled) return false;
 
       // Check if it's the player's turn (when playerColor is set)
       const pieceColor = piece[0] === 'w' ? 'w' : 'b';
-      if (playerColor && pieceColor !== playerColor) {
-        console.log('[v0] Blocked: not player color');
-        return false;
-      }
-      if (pieceColor !== chess.turn()) {
-        console.log('[v0] Blocked: not turn');
-        return false;
-      }
+      if (playerColor && pieceColor !== playerColor) return false;
+      if (pieceColor !== chess.turn()) return false;
 
       // Check if move is legal
       const moves = chess.moves({ square: sourceSquare, verbose: true });
       const isLegal = moves.some(m => m.to === targetSquare);
-      if (!isLegal) {
-        console.log('[v0] Blocked: not legal');
-        return false;
-      }
+      if (!isLegal) return false;
 
       // Determine promotion
       const isPromotion = piece[1].toLowerCase() === 'p' && 
         (targetSquare[1] === '8' || targetSquare[1] === '1');
 
-      console.log('[v0] Move accepted:', { from: sourceSquare, to: targetSquare });
       onMove({ 
         from: sourceSquare, 
         to: targetSquare, 
@@ -129,7 +117,7 @@ export function ChessBoard({
       setOptionSquares({});
       return true;
     },
-    [chess, disabled, onMove, playerColor, orientation]
+    [chess, disabled, onMove, playerColor]
   );
 
   // Handle square click (click to move)

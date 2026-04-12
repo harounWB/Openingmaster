@@ -209,8 +209,8 @@ export function Trainer({ games }: TrainerProps) {
   }, [currentGame, playerColor]);
 
   const handleMove = useCallback(
-    (move: { from: string; to: string; promotion?: string }) => {
-      if (!currentGame) return;
+  (move: { from: string; to: string; promotion?: string }) => {
+  if (!currentGame) return;
 
       const currentPos = getCurrentPosition();
 

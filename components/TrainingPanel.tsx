@@ -111,8 +111,8 @@ export function TrainingPanel({
               onClick={() => onColorChange('w')}
               className={
                 playerColor === 'w'
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-gray-800 hover:bg-gray-700'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-800 hover:bg-gray-700 text-white'
               }
             >
               Play White
@@ -123,8 +123,8 @@ export function TrainingPanel({
               onClick={() => onColorChange('b')}
               className={
                 playerColor === 'b'
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-gray-800 hover:bg-gray-700'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-800 hover:bg-gray-700 text-white'
               }
             >
               Play Black

@@ -38,12 +38,14 @@ export function Trainer({ games }: TrainerProps) {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [boardOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
   const [exploreFen, setExploreFen] = useState<string | null>(null);
+  const [exploreMoveCount, setExploreMoveCount] = useState(0); // Track moves in explore mode
   const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset exploreFen when switching to explore mode
   useEffect(() => {
     if (trainingMode === 'explore') {
       setExploreFen(null);
+      setExploreMoveCount(0);
     }
   }, [trainingMode]);
 
@@ -370,6 +372,7 @@ export function Trainer({ games }: TrainerProps) {
         
         if (result) {
           setExploreFen(exploreChess.fen());
+          setExploreMoveCount(prev => prev + 1);
           setMessage(`Moved: ${result.san}`);
           setIsCorrect(null);
         } else {
@@ -406,6 +409,7 @@ export function Trainer({ games }: TrainerProps) {
       } else if (trainingMode === 'explore') {
         setMoveIndex(0);
         setExploreFen(null);
+        setExploreMoveCount(0);
         setMessage('');
       } else {
         setMoveIndex(0);
@@ -602,9 +606,9 @@ export function Trainer({ games }: TrainerProps) {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-xs text-gray-400 min-w-[60px] text-center">
-                  {moveIndex} / {currentGame.moves.length}
-                </span>
+  <span className="text-xs text-gray-400 min-w-[60px] text-center">
+    {trainingMode === 'explore' ? `${exploreMoveCount} moves` : `${moveIndex} / ${currentGame.moves.length}`}
+  </span>
                 <Button
                   variant="ghost"
                   size="sm"

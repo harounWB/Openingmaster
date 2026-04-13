@@ -68,7 +68,7 @@ export default function UploadPage() {
               <div className="space-y-2">
                 <h2 className="text-lg font-semibold text-white">You have an existing game</h2>
                 <p className="text-sm text-gray-400">
-                  {games[0].pgn.split('\n')[0] || 'Game'} • {totalMoves} moves
+                  {games[0]?.pgn?.split('\n')[0] || 'Game'} • {totalMoves} moves
                 </p>
               </div>
               

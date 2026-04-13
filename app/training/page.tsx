@@ -20,6 +20,13 @@ export default function TrainingPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Redirect to upload if no game after hydration
+  useEffect(() => {
+    if (!isLoading && (!selectedGame || games.length === 0)) {
+      router.push('/upload');
+    }
+  }, [isLoading, selectedGame, games, router]);
+
   const handleNewGame = () => {
     clearGameData();
     router.push('/upload');
@@ -37,12 +44,8 @@ export default function TrainingPage() {
     );
   }
 
-  // If no game after hydration, redirect to upload
+  // If no game after hydration, show nothing (redirect effect is running)
   if (!selectedGame || games.length === 0) {
-    useEffect(() => {
-      router.push('/upload');
-    }, [router]);
-    
     return null;
   }
 

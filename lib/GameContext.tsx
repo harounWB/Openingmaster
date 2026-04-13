@@ -10,6 +10,7 @@ interface GameContextType {
   setSelectedGame: (game: Game | null) => void;
   moveIndex: number;
   setMoveIndex: (index: number) => void;
+  clearGameData: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -60,8 +61,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedGame, games, mounted]);
 
+  const clearGameData = () => {
+    setGames([]);
+    setSelectedGame(null);
+    setMoveIndex(0);
+    localStorage.removeItem('chessGames');
+    localStorage.removeItem('selectedGameIndex');
+  };
+
   return (
-    <GameContext.Provider value={{ games, setGames, selectedGame, setSelectedGame, moveIndex, setMoveIndex }}>
+    <GameContext.Provider value={{ games, setGames, selectedGame, setSelectedGame, moveIndex, setMoveIndex, clearGameData }}>
       {children}
     </GameContext.Provider>
   );

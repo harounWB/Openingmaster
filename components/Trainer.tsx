@@ -11,12 +11,14 @@ import { SessionFeedback } from './SessionFeedback';
 import { PlaybackControls } from './PlaybackControls';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Lightbulb } from 'lucide-react';
+import { useChessSound } from '@/hooks/useChessSound';
 
 interface TrainerProps {
   games: Game[];
 }
 
 export function Trainer({ games }: TrainerProps) {
+  const { playMoveSound } = useChessSound();
   const [currentGame, setCurrentGame] = useState<Game | null>(null);
   const [moveIndex, setMoveIndex] = useState(0);
   const [trainingMode, setTrainingMode] = useState<TrainingMode>('train');
@@ -266,6 +268,8 @@ export function Trainer({ games }: TrainerProps) {
           setIsCorrect(true);
           setHintLevel(0);
           setShowMoveComment(true);
+          // Play move sound
+          playMoveSound(false);
           // Update highlight at same time as move (in same state batch)
           setCorrectMoveSquares({ from: move.from, to: move.to });
           
@@ -370,6 +374,8 @@ export function Trainer({ games }: TrainerProps) {
         
         if (result) {
           setExploreFen(exploreChess.fen());
+          // Play move sound (capture if there was a captured piece)
+          playMoveSound(result.captured !== undefined);
           
           // Check if this move matches the next PGN move
           if (currentGame && moveIndex < currentGame.moves.length) {
@@ -400,7 +406,7 @@ export function Trainer({ games }: TrainerProps) {
         }
       }
     },
-    [currentGame, moveIndex, trainingMode, playerColor, getCurrentPosition, playOpponentMove, moveAttempts, currentSession, exploreFen, getCurrentFen]
+    [currentGame, moveIndex, trainingMode, playerColor, getCurrentPosition, playOpponentMove, moveAttempts, currentSession, exploreFen, getCurrentFen, playMoveSound]
   );
 
   const handleSelectGame = useCallback((game: Game) => {

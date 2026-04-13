@@ -15,10 +15,15 @@ export default function UploadPage() {
 
   const handleGamesLoaded = (loadedGames: Game[]) => {
     setIsLoading(true);
-    setTimeout(() => {
-      setGames(loadedGames);
+    setGames(loadedGames);
+    
+    // Auto-select first game and navigate to training
+    if (loadedGames.length > 0) {
+      setSelectedGame(loadedGames[0]);
+      router.push('/training');
+    } else {
       setIsLoading(false);
-    }, 300);
+    }
   };
 
   const handleGameSelect = (game: Game) => {

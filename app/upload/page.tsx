@@ -22,10 +22,10 @@ export default function UploadPage() {
     if (loadedGames.length > 0) {
       setSelectedGame(loadedGames[0]);
       
-      // Delay redirect slightly to ensure state is persisted
+      // Wait longer to ensure state is fully persisted to localStorage and context is updated
       setTimeout(() => {
         router.push('/training');
-      }, 100);
+      }, 200);
     } else {
       setIsLoading(false);
     }

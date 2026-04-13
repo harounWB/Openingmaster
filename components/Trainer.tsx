@@ -370,7 +370,6 @@ export function Trainer({ games }: TrainerProps) {
         
         if (result) {
           setExploreFen(exploreChess.fen());
-          setExploreMoveCount(prev => prev + 1);
           
           // Check if this move matches the next PGN move
           if (currentGame && moveIndex < currentGame.moves.length) {

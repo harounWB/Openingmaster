@@ -157,7 +157,10 @@ export default function SupportPage() {
         {/* Back Link */}
         <div className="text-center">
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              router.refresh();
+              router.back();
+            }}
             className="text-purple-400 hover:text-purple-300 transition-colors text-sm bg-none border-none cursor-pointer"
           >
             ← Back

@@ -1,7 +1,26 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Chess } from 'chess.js';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Chess, Square } from 'chess.js';
+
+// Piece images from chess.com style
+const PIECE_IMAGES: Record<string, string> = {
+  wK: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png',
+  wQ: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wq.png',
+  wR: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wr.png',
+  wB: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wb.png',
+  wN: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wn.png',
+  wP: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wp.png',
+  bK: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bk.png',
+  bQ: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bq.png',
+  bR: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/br.png',
+  bB: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bb.png',
+  bN: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bn.png',
+  bP: 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bp.png',
+};
+
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
 interface ChessBoardProps {
   fen: string;
@@ -15,66 +34,7 @@ interface ChessBoardProps {
   wrongMove?: boolean;
   wrongMoveSquares?: { from: string; to: string } | null;
   correctMoveSquares?: { from: string; to: string } | null;
-  draggable?: boolean;
-  /** When set, only this color's pieces can ever be interacted with (train mode). */
   playerColor?: 'w' | 'b' | null;
-}
-
-const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
-
-// Drag is only activated after moving this many pixels from the mousedown point
-const DRAG_THRESHOLD = 6;
-
-const LICHESS_PIECE_BASE = 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett';
-const PIECE_URLS: Record<string, string> = {
-  'wK': `${LICHESS_PIECE_BASE}/wK.svg`,
-  'wQ': `${LICHESS_PIECE_BASE}/wQ.svg`,
-  'wR': `${LICHESS_PIECE_BASE}/wR.svg`,
-  'wB': `${LICHESS_PIECE_BASE}/wB.svg`,
-  'wN': `${LICHESS_PIECE_BASE}/wN.svg`,
-  'wP': `${LICHESS_PIECE_BASE}/wP.svg`,
-  'bK': `${LICHESS_PIECE_BASE}/bK.svg`,
-  'bQ': `${LICHESS_PIECE_BASE}/bQ.svg`,
-  'bR': `${LICHESS_PIECE_BASE}/bR.svg`,
-  'bB': `${LICHESS_PIECE_BASE}/bB.svg`,
-  'bN': `${LICHESS_PIECE_BASE}/bN.svg`,
-  'bP': `${LICHESS_PIECE_BASE}/bP.svg`,
-};
-
-function squareToCoords(square: string, orientation: 'white' | 'black'): { x: number; y: number } {
-  const file = square.charCodeAt(0) - 97; // a=0 … h=7
-  const rank = parseInt(square[1]) - 1;   // 1=0 … 8=7
-
-  if (orientation === 'white') {
-    return { x: file, y: 7 - rank }; // rank 8 → row 0 (top)
-  } else {
-    // Black orientation: flip both axes
-    return { x: 7 - file, y: rank };
-  }
-}
-
-function coordsToSquare(x: number, y: number, orientation: 'white' | 'black'): string | null {
-  if (x < 0 || x >= 8 || y < 0 || y >= 8) return null;
-  
-  if (orientation === 'white') {
-    // White: normal mapping
-    const file = FILES[x];           // x: 0→a, 7→h
-    const rank = RANKS[y];           // y: 0→8, 7→1
-    return `${file}${rank}`;
-  } else {
-    // Black: invert both axes to flip the board coordinates
-    const file = FILES[7 - x];       // x: 0→h, 7→a
-    const rank = RANKS[7 - y];       // y: 0→1, 7→8
-    return `${file}${rank}`;
-  }
-}
-
-interface PiecePosition {
-  piece: { type: string; color: 'w' | 'b' };
-  square: string;
-  x: number;
-  y: number;
 }
 
 export function ChessBoard({
@@ -89,408 +49,382 @@ export function ChessBoard({
   wrongMove = false,
   wrongMoveSquares = null,
   correctMoveSquares = null,
-  draggable = true,
   playerColor = null,
 }: ChessBoardProps) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-  const [shakeBoard, setShakeBoard] = useState(false);
-
-  // Drag state — isDragging is only true after threshold is exceeded
-  const pendingDragRef = useRef<{
-    from: string;
-    startX: number;
-    startY: number;
-  } | null>(null);
-
-  const [dragState, setDragState] = useState<{
-    from: string;
-    currentX: number;
-    currentY: number;
-  } | null>(null);
-
+  const [legalMoves, setLegalMoves] = useState<string[]>([]);
+  const [dragging, setDragging] = useState<{ square: string; x: number; y: number } | null>(null);
+  const [shaking, setShaking] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
-  const chess = useMemo(() => new Chess(fen), [fen]);
+  const chessRef = useRef(new Chess(fen));
 
-  // Clear selected square when FEN changes (move was made)
-  const prevFenRef = useRef(fen);
+  // Update chess instance when FEN changes
   useEffect(() => {
-    if (prevFenRef.current !== fen) {
-      prevFenRef.current = fen;
-      setSelectedSquare(null);
-    }
+    chessRef.current = new Chess(fen);
+    setSelectedSquare(null);
+    setLegalMoves([]);
   }, [fen]);
 
-  // Shake on wrong move
+  // Shake animation on wrong move
   useEffect(() => {
     if (wrongMove) {
-      setShakeBoard(true);
-      const t = setTimeout(() => setShakeBoard(false), 300);
-      return () => clearTimeout(t);
+      setShaking(true);
+      const timer = setTimeout(() => setShaking(false), 300);
+      return () => clearTimeout(timer);
     }
   }, [wrongMove]);
 
-  // Legal moves map: from → to[]
-  const legalMoves = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    chess.moves({ verbose: true }).forEach((m) => {
-      if (!map[m.from]) map[m.from] = [];
-      map[m.from].push(m.to);
-    });
-    return map;
-  }, [chess]);
-
-  // Piece positions
-  const piecePositions = useMemo(() => {
-    const positions: PiecePosition[] = [];
-    for (const file of FILES) {
-      for (const rank of RANKS) {
-        const square = `${file}${rank}`;
-        const piece = chess.get(square);
-        if (piece) {
-          const coords = squareToCoords(square, orientation);
-          positions.push({ piece, square, x: coords.x, y: coords.y });
-        }
-      }
-    }
-    return positions;
-  }, [chess, orientation]);
-
-  const tryMove = useCallback(
-    (from: string, to: string) => {
-      if (!legalMoves[from]?.includes(to)) return;
-      const piece = chess.get(from);
-      const isPromotion = piece?.type === 'p' && (to[1] === '8' || to[1] === '1');
-      onMove({ from, to, promotion: isPromotion ? 'q' : undefined });
-    },
-    [chess, legalMoves, onMove]
-  );
-
-  // ─── CLICK TO MOVE ────────────────────────────────────────────────────────
-  const onSquareClick = useCallback(
-    (square: string) => {
-      if (disabled) return;
-
-      // Deselect
-      if (selectedSquare === square) {
-        setSelectedSquare(null);
-        return;
-      }
-
-      // Complete a move
-      if (selectedSquare && legalMoves[selectedSquare]?.includes(square)) {
-        tryMove(selectedSquare, square);
-        setSelectedSquare(null);
-        return;
-      }
-
-      // Select a piece
-      // If playerColor is set, only that color's pieces can ever be selected.
-      // Additionally the piece must belong to the side whose turn it currently is.
-      const piece = chess.get(square);
-      const isPlayersPiece = playerColor ? piece?.color === playerColor : true;
-      if (piece && isPlayersPiece && piece.color === chess.turn()) {
-        setSelectedSquare(square);
-        return;
-      }
-
-      // Clicked on an empty or opponent square with nothing selected
-      setSelectedSquare(null);
-    },
-    [selectedSquare, chess, disabled, legalMoves, tryMove, playerColor]
-  );
-
-  // ─── DRAG (MOUSE) ─────────────────────────────────────────────────────────
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent, square: string) => {
-      if (disabled || !draggable) return;
-      const piece = chess.get(square);
-      if (!piece) return;
-      // Only allow dragging the player's own pieces when they are to move
-      if (playerColor && piece.color !== playerColor) return;
-      if (piece.color !== chess.turn()) return;
-      if (!legalMoves[square]?.length) return;
-
-      // Record the potential drag start — don't commit yet
-      pendingDragRef.current = { from: square, startX: e.clientX, startY: e.clientY };
-      e.preventDefault();
-    },
-    [disabled, draggable, chess, legalMoves, playerColor]
-  );
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (dragState) {
-        // Already dragging — update position
-        setDragState((prev) => prev ? { ...prev, currentX: e.clientX, currentY: e.clientY } : null);
-        return;
-      }
-
-      if (!pendingDragRef.current) return;
-
-      const { startX, startY, from } = pendingDragRef.current;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-
-      if (Math.sqrt(dx * dx + dy * dy) >= DRAG_THRESHOLD) {
-        // Threshold crossed — begin drag
-        setSelectedSquare(from); // highlight source + show dots
-        setDragState({ from, currentX: e.clientX, currentY: e.clientY });
-        pendingDragRef.current = null;
-      }
-    },
-    [dragState]
-  );
-
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent) => {
-      if (dragState && boardRef.current) {
-        const boardRect = boardRef.current.getBoundingClientRect();
-        const sq = boardRect.width / 8;
-        const col = Math.floor((e.clientX - boardRect.left) / sq);
-        const row = Math.floor((e.clientY - boardRect.top) / sq);
-        const toSquare = coordsToSquare(col, row, orientation);
-        if (toSquare) tryMove(dragState.from, toSquare);
-        setDragState(null);
-        setSelectedSquare(null);
-      }
-      pendingDragRef.current = null;
-    },
-    [dragState, orientation, tryMove]
-  );
-
-  // ─── DRAG (TOUCH) ─────────────────────────────────────────────────────────
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent, square: string) => {
-      if (disabled || !draggable) return;
-      const piece = chess.get(square);
-      if (!piece) return;
-      // Only allow dragging the player's own pieces when they are to move
-      if (playerColor && piece.color !== playerColor) return;
-      if (piece.color !== chess.turn()) return;
-      if (!legalMoves[square]?.length) return;
-
-      const t = e.touches[0];
-      pendingDragRef.current = { from: square, startX: t.clientX, startY: t.clientY };
-      e.preventDefault();
-    },
-    [disabled, draggable, chess, legalMoves, playerColor]
-  );
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      const t = e.touches[0];
-
-      if (dragState) {
-        setDragState((prev) => prev ? { ...prev, currentX: t.clientX, currentY: t.clientY } : null);
-        e.preventDefault();
-        return;
-      }
-
-      if (!pendingDragRef.current) return;
-
-      const { startX, startY, from } = pendingDragRef.current;
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-
-      if (Math.sqrt(dx * dx + dy * dy) >= DRAG_THRESHOLD) {
-        setSelectedSquare(from);
-        setDragState({ from, currentX: t.clientX, currentY: t.clientY });
-        pendingDragRef.current = null;
-        e.preventDefault();
-      }
-    },
-    [dragState]
-  );
-
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (dragState && boardRef.current) {
-        const boardRect = boardRef.current.getBoundingClientRect();
-        const sq = boardRect.width / 8;
-        const t = e.changedTouches[0];
-        const col = Math.floor((t.clientX - boardRect.left) / sq);
-        const row = Math.floor((t.clientY - boardRect.top) / sq);
-        const toSquare = coordsToSquare(col, row, orientation);
-        if (toSquare) tryMove(dragState.from, toSquare);
-        setDragState(null);
-        setSelectedSquare(null);
-      }
-      pendingDragRef.current = null;
-    },
-    [dragState, orientation, tryMove]
-  );
-
-  // ─── KEYBOARD NAV ─────────────────────────────────────────────────────────
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') { e.preventDefault(); onNavigate?.('next'); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); onNavigate?.('prev'); }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        onNavigate?.('next');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onNavigate?.('prev');
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onNavigate]);
 
-  // The square that is "active" — either via click selection or drag source
-  const activeSquare = dragState?.from ?? selectedSquare;
-  const activeLegalTargets = activeSquare ? (legalMoves[activeSquare] ?? []) : [];
+  // Get squares in correct order based on orientation
+  const getSquares = useCallback(() => {
+    const files = orientation === 'white' ? FILES : [...FILES].reverse();
+    const ranks = orientation === 'white' ? RANKS : [...RANKS].reverse();
+    const squares: string[] = [];
+    for (const rank of ranks) {
+      for (const file of files) {
+        squares.push(file + rank);
+      }
+    }
+    return squares;
+  }, [orientation]);
+
+  // Check if a piece can be moved
+  const canMovePiece = useCallback((square: string) => {
+    const chess = chessRef.current;
+    const piece = chess.get(square as Square);
+    if (!piece) return false;
+    if (disabled) return false;
+    
+    // In training mode, only allow player's pieces
+    if (playerColor && piece.color !== playerColor) return false;
+    
+    // Only allow moving pieces of the side to move
+    if (piece.color !== chess.turn()) return false;
+    
+    return true;
+  }, [disabled, playerColor]);
+
+  // Handle clicking a square
+  const handleSquareClick = useCallback((square: string) => {
+    const chess = chessRef.current;
+
+    // If a piece is already selected
+    if (selectedSquare) {
+      // Check if clicking on a legal move target
+      if (legalMoves.includes(square)) {
+        const piece = chess.get(selectedSquare as Square);
+        const isPromotion = piece?.type === 'p' && (square[1] === '8' || square[1] === '1');
+        
+        onMove({
+          from: selectedSquare,
+          to: square,
+          promotion: isPromotion ? 'q' : undefined,
+        });
+        
+        setSelectedSquare(null);
+        setLegalMoves([]);
+        return;
+      }
+
+      // Clicking on same square deselects
+      if (square === selectedSquare) {
+        setSelectedSquare(null);
+        setLegalMoves([]);
+        return;
+      }
+    }
+
+    // Try to select a new piece
+    if (canMovePiece(square)) {
+      const moves = chess.moves({ square: square as Square, verbose: true });
+      setSelectedSquare(square);
+      setLegalMoves(moves.map(m => m.to));
+    } else {
+      setSelectedSquare(null);
+      setLegalMoves([]);
+    }
+  }, [selectedSquare, legalMoves, canMovePiece, onMove]);
+
+  // Handle drag start
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent, square: string) => {
+    if (!canMovePiece(square)) return;
+
+    e.preventDefault();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    setDragging({ square, x: clientX, y: clientY });
+    
+    const chess = chessRef.current;
+    const moves = chess.moves({ square: square as Square, verbose: true });
+    setSelectedSquare(square);
+    setLegalMoves(moves.map(m => m.to));
+  }, [canMovePiece]);
+
+  // Handle drag move
+  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!dragging) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    setDragging(prev => prev ? { ...prev, x: clientX, y: clientY } : null);
+  }, [dragging]);
+
+  // Handle drag end
+  const handleDragEnd = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!dragging || !boardRef.current) return;
+
+    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : e.clientY;
+
+    const rect = boardRef.current.getBoundingClientRect();
+    const squareSize = rect.width / 8;
+    
+    let col = Math.floor((clientX - rect.left) / squareSize);
+    let row = Math.floor((clientY - rect.top) / squareSize);
+
+    // Clamp to valid range
+    col = Math.max(0, Math.min(7, col));
+    row = Math.max(0, Math.min(7, row));
+
+    // Convert to square notation based on orientation
+    let file: string;
+    let rank: string;
+    
+    if (orientation === 'white') {
+      file = FILES[col];
+      rank = RANKS[row];
+    } else {
+      file = FILES[7 - col];
+      rank = RANKS[7 - row];
+    }
+    
+    const targetSquare = file + rank;
+
+    // Check if valid move
+    if (legalMoves.includes(targetSquare)) {
+      const chess = chessRef.current;
+      const piece = chess.get(dragging.square as Square);
+      const isPromotion = piece?.type === 'p' && (targetSquare[1] === '8' || targetSquare[1] === '1');
+
+      onMove({
+        from: dragging.square,
+        to: targetSquare,
+        promotion: isPromotion ? 'q' : undefined,
+      });
+    }
+
+    setDragging(null);
+    setSelectedSquare(null);
+    setLegalMoves([]);
+  }, [dragging, legalMoves, onMove, orientation]);
+
+  // Add and remove drag event listeners
+  useEffect(() => {
+    if (dragging) {
+      window.addEventListener('mousemove', handleDragMove);
+      window.addEventListener('mouseup', handleDragEnd);
+      window.addEventListener('touchmove', handleDragMove);
+      window.addEventListener('touchend', handleDragEnd);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleDragMove);
+        window.removeEventListener('mouseup', handleDragEnd);
+        window.removeEventListener('touchmove', handleDragMove);
+        window.removeEventListener('touchend', handleDragEnd);
+      };
+    }
+  }, [dragging, handleDragMove, handleDragEnd]);
+
+  // Get square background color
+  const getSquareColor = (square: string, isLight: boolean) => {
+    // Wrong move - red
+    if (wrongMoveSquares && (wrongMoveSquares.from === square || wrongMoveSquares.to === square)) {
+      return isLight ? '#f08080' : '#dc3545';
+    }
+    // Correct move - green
+    if (correctMoveSquares && (correctMoveSquares.from === square || correctMoveSquares.to === square)) {
+      return isLight ? '#90ee90' : '#28a745';
+    }
+    // Hint piece - blue
+    if (hintSquare === square) {
+      return isLight ? '#90caf9' : '#42a5f5';
+    }
+    // Hint destination - light blue
+    if (hintDestinations.includes(square)) {
+      return isLight ? '#b3e5fc' : '#4fc3f7';
+    }
+    // Last move highlight - yellow/green
+    if (lastMove && (lastMove.from === square || lastMove.to === square)) {
+      return isLight ? '#f7f769' : '#baca2b';
+    }
+    // Selected square
+    if (selectedSquare === square) {
+      return isLight ? '#f7f769' : '#baca2b';
+    }
+    // Normal square colors
+    return isLight ? '#f0d9b5' : '#b58863';
+  };
+
+  const squares = getSquares();
+  const chess = chessRef.current;
+
+  // Responsive board size
+  const [boardSize, setBoardSize] = useState(480);
+  const squareSize = boardSize / 8;
+  const pieceSize = squareSize * 0.85;
+
+  // Calculate responsive board size
+  useEffect(() => {
+    const updateSize = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      
+      // Mobile: 95% of viewport width, max 560px
+      // Desktop: larger, max 700px
+      let size: number;
+      if (vw < 768) {
+        size = Math.min(vw * 0.95, vh * 0.55, 560);
+      } else {
+        size = Math.min(vw * 0.5, vh * 0.75, 700);
+      }
+      
+      // Ensure it's divisible by 8 for clean squares
+      size = Math.floor(size / 8) * 8;
+      setBoardSize(Math.max(320, size));
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
 
   return (
-    <div className="flex justify-center w-full select-none">
+    <div className="flex justify-center w-full">
       <div
         ref={boardRef}
-        className={`rounded-lg overflow-hidden shadow-2xl relative ${shakeBoard ? 'animate-shake' : ''}`}
-        style={{ width: '400px', aspectRatio: '1', cursor: dragState ? 'grabbing' : 'default' }}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        className={`relative grid grid-cols-8 rounded-lg overflow-hidden shadow-2xl select-none ${shaking ? 'animate-shake' : ''}`}
+        style={{ 
+          width: `${boardSize}px`, 
+          height: `${boardSize}px`,
+          touchAction: 'none',
+        }}
       >
-        {/* ── Board squares ─────────────────────────────────────────── */}
-        <div className="absolute inset-0 grid grid-cols-8 grid-rows-8">
-          {RANKS.map((rank) =>
-            FILES.map((file) => {
-              const square = `${file}${rank}`;
-              const coords = squareToCoords(square, orientation);
-              const isLight = (coords.x + coords.y) % 2 === 0;
-              const isLastMove = lastMove && (lastMove.from === square || lastMove.to === square);
-              const isSelected = activeSquare === square;
-              const isTarget = activeLegalTargets.includes(square);
-              const hasPiece = !!chess.get(square);
-              const isHintPiece = hintSquare === square;
-              const isHintDest = hintDestinations.includes(square);
-              const isWrongFrom = wrongMoveSquares?.from === square;
-              const isWrongTo = wrongMoveSquares?.to === square;
-              const isCorrectFrom = correctMoveSquares?.from === square;
-              const isCorrectTo = correctMoveSquares?.to === square;
+        {squares.map((square) => {
+          const file = square[0];
+          const rank = square[1];
+          const fileIndex = FILES.indexOf(file);
+          const rankIndex = RANKS.indexOf(rank);
+          const isLight = (fileIndex + rankIndex) % 2 === 0;
+          const piece = chess.get(square as Square);
+          const pieceKey = piece ? `${piece.color}${piece.type.toUpperCase()}` : null;
+          const isDraggedPiece = dragging?.square === square;
+          const isLegalTarget = legalMoves.includes(square);
+          const hasPiece = !!piece;
 
-              let bgColor = isLight ? '#f0d9b5' : '#b58863';
+          return (
+            <div
+              key={square}
+              className="relative flex items-center justify-center cursor-pointer aspect-square"
+              style={{
+                backgroundColor: getSquareColor(square, isLight),
+              }}
+              onClick={() => handleSquareClick(square)}
+              onMouseDown={(e) => piece && handleDragStart(e, square)}
+              onTouchStart={(e) => piece && handleDragStart(e, square)}
+            >
+              {/* Legal move indicator */}
+              {isLegalTarget && !isDraggedPiece && (
+                <div
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: hasPiece ? '85%' : '30%',
+                    height: hasPiece ? '85%' : '30%',
+                    backgroundColor: hasPiece ? 'transparent' : 'rgba(0, 0, 0, 0.15)',
+                    border: hasPiece ? `${Math.max(3, squareSize * 0.08)}px solid rgba(0, 0, 0, 0.15)` : 'none',
+                  }}
+                />
+              )}
 
-              if (isCorrectFrom || isCorrectTo) {
-                bgColor = isLight ? '#a6d5a6' : '#7fb07f';
-              } else if (isWrongFrom || isWrongTo) {
-                bgColor = isLight ? '#f08080' : '#d9534f';
-              } else if (isHintPiece) {
-                bgColor = isLight ? '#90caf9' : '#42a5f5';
-              } else if (isHintDest) {
-                bgColor = isLight ? '#b3e5fc' : '#4fc3f7';
-              } else if (isLastMove) {
-                bgColor = isLight ? '#cdd26a' : '#aaa23a';
-              } else if (isSelected) {
-                bgColor = isLight ? '#f7f769' : '#baca2b';
-              }
-
-              // Determine display position based on orientation
-              let displayRank = rank;
-              let displayFile = file;
-              if (orientation === 'black') {
-                // Reverse the display coordinates
-                displayRank = String(9 - parseInt(rank));
-                displayFile = String.fromCharCode(104 - displayFile.charCodeAt(0)); // 'h'=104, 'a'=97
-              }
-
-              return (
-                <button
-                  key={square}
-                  onClick={() => onSquareClick(square)}
-                  onMouseDown={(e) => handleMouseDown(e, square)}
-                  onTouchStart={(e) => handleTouchStart(e, square)}
-                  disabled={disabled}
-                  className="relative flex items-center justify-center cursor-pointer disabled:cursor-default"
-                  style={{ backgroundColor: bgColor }}
-                  aria-label={`Square ${square}`}
-                  draggable={false}
-                >
-                  {/* Rank label */}
-                  {(orientation === 'white' ? file === 'a' : file === 'h') && (
-                    <span
-                      className="absolute top-0.5 left-1 font-bold pointer-events-none select-none"
-                      style={{ color: isLight ? '#b58863' : '#f0d9b5', fontSize: '11px' }}
-                    >
-                      {displayRank}
-                    </span>
-                  )}
-                  {/* File label */}
-                  {(orientation === 'white' ? rank === '1' : rank === '8') && (
-                    <span
-                      className="absolute bottom-0.5 right-1 font-bold pointer-events-none select-none"
-                      style={{ color: isLight ? '#b58863' : '#f0d9b5', fontSize: '11px' }}
-                    >
-                      {displayFile}
-                    </span>
-                  )}
-
-                  {/* Move dot — empty square */}
-                  {isTarget && !hasPiece && (
-                    <div
-                      className="absolute rounded-full pointer-events-none"
-                      style={{ width: '32%', height: '32%', backgroundColor: 'rgba(0,0,0,0.15)' }}
-                    />
-                  )}
-                  {/* Capture ring — occupied square */}
-                  {isTarget && hasPiece && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        borderRadius: '50%',
-                        background: 'radial-gradient(transparent 56%, rgba(0,0,0,0.15) 57%)',
-                      }}
-                    />
-                  )}
-                </button>
-              );
-            })
-          )}
-        </div>
-
-        {/* ── Pieces ────────────────────────────────────────────────── */}
-        <div className="absolute inset-0 pointer-events-none">
-          {piecePositions.map((pos) => {
-            const pieceKey = `${pos.piece.color}${pos.piece.type.toUpperCase()}`;
-            const url = PIECE_URLS[pieceKey];
-            if (!url) return null;
-
-            const isDragging = dragState?.from === pos.square;
-
-            let cssLeft = `${pos.x * 12.5}%`;
-            let cssTop  = `${pos.y * 12.5}%`;
-
-            if (isDragging && boardRef.current) {
-              const rect = boardRef.current.getBoundingClientRect();
-              const sz = rect.width / 8;
-              const rawLeft = dragState!.currentX - rect.left - sz / 2;
-              const rawTop  = dragState!.currentY - rect.top  - sz / 2;
-              cssLeft = `${Math.max(0, Math.min(rect.width  - sz, rawLeft))}px`;
-              cssTop  = `${Math.max(0, Math.min(rect.height - sz, rawTop))}px`;
-            }
-
-            return (
-              <div
-                key={pos.square}
-                className="absolute p-0.5"
-                style={{
-                  left: cssLeft,
-                  top: cssTop,
-                  width: '12.5%',
-                  height: '12.5%',
-                  transition: 'none',
-                  transform: isDragging ? 'scale(1.12)' : 'scale(1)',
-                  filter: isDragging
-                    ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.45))'
-                    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))',
-                  zIndex: isDragging ? 100 : 10,
-                }}
-              >
+              {/* Piece */}
+              {pieceKey && !isDraggedPiece && (
                 <img
-                  src={url}
-                  alt={`${pos.piece.color === 'w' ? 'white' : 'black'} ${pos.piece.type}`}
-                  className="w-full h-full select-none"
+                  src={PIECE_IMAGES[pieceKey]}
+                  alt={pieceKey}
+                  className="pointer-events-none"
+                  style={{ width: `${pieceSize}px`, height: `${pieceSize}px` }}
                   draggable={false}
                 />
-              </div>
-            );
-          })}
-        </div>
+              )}
+
+              {/* Coordinate labels */}
+              {(orientation === 'white' ? file === 'a' : file === 'h') && (
+                <span
+                  className="absolute top-0.5 left-1 font-bold pointer-events-none select-none"
+                  style={{ 
+                    color: isLight ? '#b58863' : '#f0d9b5',
+                    fontSize: `${Math.max(10, squareSize * 0.18)}px`,
+                  }}
+                >
+                  {rank}
+                </span>
+              )}
+              {(orientation === 'white' ? rank === '1' : rank === '8') && (
+                <span
+                  className="absolute bottom-0.5 right-1 font-bold pointer-events-none select-none"
+                  style={{ 
+                    color: isLight ? '#b58863' : '#f0d9b5',
+                    fontSize: `${Math.max(10, squareSize * 0.18)}px`,
+                  }}
+                >
+                  {file}
+                </span>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Dragged piece */}
+        {dragging && boardRef.current && (
+          <div
+            className="fixed pointer-events-none z-50"
+            style={{
+              left: dragging.x - pieceSize / 2,
+              top: dragging.y - pieceSize / 2,
+              width: `${pieceSize}px`,
+              height: `${pieceSize}px`,
+            }}
+          >
+            {(() => {
+              const piece = chess.get(dragging.square as Square);
+              const pieceKey = piece ? `${piece.color}${piece.type.toUpperCase()}` : null;
+              return pieceKey ? (
+                <img
+                  src={PIECE_IMAGES[pieceKey]}
+                  alt={pieceKey}
+                  className="w-full h-full drop-shadow-lg"
+                  style={{ transform: 'scale(1.1)' }}
+                  draggable={false}
+                />
+              ) : null;
+            })()}
+          </div>
+        )}
       </div>
     </div>
   );

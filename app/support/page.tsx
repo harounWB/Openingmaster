@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { CRYPTO_DATA, CryptoKey } from '@/lib/cryptoData';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Check } from 'lucide-react';
 
 export default function SupportPage() {
+  const router = useRouter();
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoKey | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -154,12 +156,12 @@ export default function SupportPage() {
 
         {/* Back Link */}
         <div className="text-center">
-          <a
-            href="/upload"
-            className="text-purple-400 hover:text-purple-300 transition-colors text-sm"
+          <button
+            onClick={() => router.back()}
+            className="text-purple-400 hover:text-purple-300 transition-colors text-sm bg-none border-none cursor-pointer"
           >
-            ← Back to Upload
-          </a>
+            ← Back
+          </button>
         </div>
       </div>
     </main>

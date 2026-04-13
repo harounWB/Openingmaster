@@ -9,31 +9,42 @@ import { ArrowLeft, Plus } from 'lucide-react';
 export default function TrainingPage() {
   const router = useRouter();
   const { games, selectedGame, setSelectedGame, clearGameData } = useGameContext();
-  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Wait for client-side hydration
+  // Wait for context to hydrate from localStorage
   useEffect(() => {
-    setMounted(true);
+    // Give context time to load from localStorage
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   // Redirect to upload if no game after hydration
   useEffect(() => {
-    if (mounted && (!selectedGame || games.length === 0)) {
+    if (!isLoading && (!selectedGame || games.length === 0)) {
       router.push('/upload');
     }
-  }, [mounted, selectedGame, games, router]);
+  }, [isLoading, selectedGame, games, router]);
 
   const handleNewGame = () => {
     clearGameData();
     router.push('/upload');
   };
 
-  // Return null on server and during initial hydration to prevent mismatch
-  if (!mounted) {
-    return null;
+  // Show loading state while context hydrates
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </main>
+    );
   }
 
-  // If no game after hydration, redirect (effect above will handle it)
+  // If no game after hydration, show nothing (redirect effect is running)
   if (!selectedGame || games.length === 0) {
     return null;
   }

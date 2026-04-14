@@ -40,6 +40,7 @@ export default function SupportPage() {
           <p className="text-gray-400 leading-relaxed mt-4">
             If you find it useful and want to support the project, you can donate using crypto. Every contribution
             helps improve the platform and keep it running.
+            My Telegram for PGN files : bluhadtogo
           </p>
         </div>
 
@@ -54,11 +55,10 @@ export default function SupportPage() {
                   setSelectedCrypto(key);
                   setSelectedNetwork(null);
                 }}
-                className={`w-full flex items-center gap-3 p-4 rounded-lg transition-all duration-200 ${
-                  selectedCrypto === key
+                className={`w-full flex items-center gap-3 p-4 rounded-lg transition-all duration-200 ${selectedCrypto === key
                     ? 'bg-purple-600/30 border border-purple-500 shadow-lg shadow-purple-500/20'
                     : 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800 hover:border-gray-600'
-                }`}
+                  }`}
               >
                 <img
                   src={crypto.icon}
@@ -84,11 +84,10 @@ export default function SupportPage() {
                 <button
                   key={networkKey}
                   onClick={() => setSelectedNetwork(networkKey)}
-                  className={`w-full flex items-center gap-3 p-4 rounded-lg transition-all duration-200 text-left ${
-                    selectedNetwork === networkKey
+                  className={`w-full flex items-center gap-3 p-4 rounded-lg transition-all duration-200 text-left ${selectedNetwork === networkKey
                       ? 'bg-purple-600/30 border border-purple-500 shadow-lg shadow-purple-500/20'
                       : 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800 hover:border-gray-600'
-                  }`}
+                    }`}
                 >
                   <div className="flex-1">
                     <div className="font-medium text-white">{networkData.name}</div>

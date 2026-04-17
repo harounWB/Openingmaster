@@ -243,8 +243,8 @@ export default function DashboardPage() {
             <button
               onClick={() => {
                 if (selectedPGN) {
-                  const pgnProgress = pgnProgress.find(p => p.fileName === selectedPGN);
-                  const game = pgnProgress?.games[0];
+                  const pgn = pgnProgress.find(p => p.fileName === selectedPGN);
+                  const game = pgn?.games[0];
                   if (game) {
                     setSelectedGame(game);
                     router.push('/training');

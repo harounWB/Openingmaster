@@ -34,27 +34,65 @@ function playTone(
   oscillator.stop(context.currentTime + startAt + duration + 0.03);
 }
 
+function playWoodKnock(context: AudioContext, volume = 0.05, startAt = 0, accent = 1) {
+  const oscillator = context.createOscillator();
+  const gainNode = context.createGain();
+  const filter = context.createBiquadFilter();
+  const bufferSize = Math.max(1, Math.floor(context.sampleRate * 0.04));
+  const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+  const channel = buffer.getChannelData(0);
+
+  for (let i = 0; i < bufferSize; i += 1) {
+    channel[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+
+  const noiseSource = context.createBufferSource();
+  noiseSource.buffer = buffer;
+
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1200 + accent * 250, context.currentTime + startAt);
+  filter.Q.setValueAtTime(1.4, context.currentTime + startAt);
+
+  oscillator.type = 'triangle';
+  oscillator.frequency.setValueAtTime(180 + accent * 28, context.currentTime + startAt);
+  oscillator.frequency.exponentialRampToValueAtTime(70 + accent * 8, context.currentTime + startAt + 0.07);
+
+  gainNode.gain.setValueAtTime(0.0001, context.currentTime + startAt);
+  gainNode.gain.exponentialRampToValueAtTime(volume, context.currentTime + startAt + 0.01);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + startAt + 0.08);
+
+  oscillator.connect(gainNode);
+  noiseSource.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(context.destination);
+
+  oscillator.start(context.currentTime + startAt);
+  oscillator.stop(context.currentTime + startAt + 0.09);
+  noiseSource.start(context.currentTime + startAt);
+  noiseSource.stop(context.currentTime + startAt + 0.05);
+}
+
 function playSound(context: AudioContext, kind: SoundKind) {
   switch (kind) {
     case 'move':
-      playTone(context, 620, 0.08, 0.04, 'triangle');
+      playWoodKnock(context, 0.045, 0, 1);
       break;
     case 'capture':
-      playTone(context, 520, 0.07, 0.05, 'triangle');
-      playTone(context, 360, 0.12, 0.035, 'sine', 0.03);
+      playWoodKnock(context, 0.055, 0, 1.4);
+      playTone(context, 240, 0.08, 0.02, 'triangle', 0.01);
       break;
     case 'check':
-      playTone(context, 740, 0.06, 0.05, 'square');
-      playTone(context, 980, 0.08, 0.03, 'square', 0.05);
+      playWoodKnock(context, 0.05, 0, 1.2);
+      playTone(context, 880, 0.05, 0.02, 'square', 0.025);
       break;
     case 'castle':
-      playTone(context, 480, 0.06, 0.04, 'triangle');
-      playTone(context, 680, 0.09, 0.04, 'triangle', 0.05);
+      playWoodKnock(context, 0.04, 0, 0.8);
+      playWoodKnock(context, 0.04, 0.045, 1.1);
       break;
     case 'promotion':
-      playTone(context, 440, 0.06, 0.04, 'sine');
-      playTone(context, 660, 0.06, 0.04, 'sine', 0.04);
-      playTone(context, 880, 0.08, 0.035, 'sine', 0.08);
+      playWoodKnock(context, 0.045, 0, 1);
+      playTone(context, 660, 0.05, 0.02, 'triangle', 0.03);
+      playTone(context, 920, 0.06, 0.018, 'triangle', 0.06);
       break;
   }
 }

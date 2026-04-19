@@ -539,6 +539,16 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
         if (initialPosition.turn() === 'w') {
           setMessage(`White is playing...`);
           setTimeout(() => {
+            const openingMove = selectedGame.moves[0];
+            if (openingMove) {
+              const tempChess = replayGameToMoveIndex(selectedGame, 0);
+              const result = tempChess.move({ from: openingMove.from, to: openingMove.to, promotion: openingMove.promotion });
+              const isCapture = result?.captured !== undefined;
+              const isCheck = tempChess.inCheck();
+              const isCastle = Boolean(result?.flags?.includes('k') || result?.flags?.includes('q'));
+              const isPromotion = result?.promotion !== undefined;
+              playMoveSound(isCapture, isCheck, isCastle, isPromotion);
+            }
             setMoveTransition({ from: selectedGame.moves[0].from, to: selectedGame.moves[0].to, direction: 'forward' });
             setMoveIndex(1);
             setMessage(`Playing as Black. Your turn...`);
@@ -555,7 +565,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
         setMessage(`Playing as ${playerColor === 'w' ? 'White' : 'Black'}. Your turn...`);
       }
     }
-  }, [selectedGame, playerColor, trainingMode]);
+  }, [selectedGame, playerColor, trainingMode, playMoveSound]);
 
   const handleCompleteGame = useCallback(() => {
     if (selectedGame) {
@@ -572,11 +582,32 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
         return;
       }
 
+      const shouldPlaySound = index !== moveIndex;
       if (index === moveIndex + 1 && selectedGame.moves[moveIndex]) {
         const move = selectedGame.moves[moveIndex];
+        const tempChess = replayGameToMoveIndex(selectedGame, moveIndex);
+        const result = tempChess.move({ from: move.from, to: move.to, promotion: move.promotion });
+        if (shouldPlaySound && result) {
+          playMoveSound(
+            result.captured !== undefined,
+            tempChess.inCheck(),
+            Boolean(result.flags?.includes('k') || result.flags?.includes('q')),
+            result.promotion !== undefined
+          );
+        }
         setMoveTransition({ from: move.from, to: move.to, direction: 'forward' });
       } else if (index === moveIndex - 1 && selectedGame.moves[index]) {
         const move = selectedGame.moves[index];
+        const tempChess = replayGameToMoveIndex(selectedGame, index);
+        const result = tempChess.move({ from: move.from, to: move.to, promotion: move.promotion });
+        if (shouldPlaySound && result) {
+          playMoveSound(
+            result.captured !== undefined,
+            tempChess.inCheck(),
+            Boolean(result.flags?.includes('k') || result.flags?.includes('q')),
+            result.promotion !== undefined
+          );
+        }
         setMoveTransition({ from: move.from, to: move.to, direction: 'backward' });
       } else {
         setMoveTransition(null);
@@ -595,7 +626,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
         setMessage(`Move ${currentMove.san}`);
       }
     }
-  }, [selectedGame, moveIndex, trainingMode]);
+  }, [selectedGame, moveIndex, trainingMode, playMoveSound]);
 
   const handleKeyboardNavigation = useCallback((direction: 'next' | 'prev') => {
     if (trainingMode === 'train' && direction === 'next' && moveIndex >= (selectedGame?.moves.length || 0)) {
@@ -620,19 +651,6 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
     
     const playNextMove = () => {
       if (nextIndex <= selectedGame.moves.length) {
-        // Play sound for this move
-        const moveToPlay = selectedGame.moves[nextIndex - 1];
-        if (moveToPlay) {
-          const tempChess = replayGameToMoveIndex(selectedGame, nextIndex - 1);
-          const result = tempChess.move({ from: moveToPlay.from, to: moveToPlay.to, promotion: moveToPlay.promotion });
-          const isCapture = result?.captured !== undefined;
-          const isCheck = tempChess.inCheck();
-          const isCastle = result?.flags?.includes('k') || result?.flags?.includes('q');
-          const isPromotion = result?.promotion !== undefined;
-          
-          playMoveSound(isCapture, isCheck, isCastle, isPromotion);
-        }
-        
         handleNavigateMove(nextIndex);
         nextIndex += 1;
         
@@ -646,7 +664,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
     };
     
     playbackIntervalRef.current = setTimeout(playNextMove, delayMs);
-  }, [trainingMode, selectedGame, moveIndex, playbackSpeed, handleNavigateMove, playMoveSound]);
+  }, [trainingMode, selectedGame, moveIndex, playbackSpeed, handleNavigateMove]);
 
   const handlePlaybackPause = useCallback(() => {
     setIsPlaying(false);

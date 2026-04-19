@@ -1,52 +1,97 @@
 'use client';
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
-// Chess.com style move sounds
-const MOVE_SOUND_URL = 'https://www.chess.com/sound/move.mp3';
-const CAPTURE_SOUND_URL = 'https://www.chess.com/sound/capture.mp3';
-const CHECK_SOUND_URL = 'https://www.chess.com/sound/check.mp3';
-const CASTLE_SOUND_URL = 'https://www.chess.com/sound/castle.mp3';
-const PROMOTE_SOUND_URL = 'https://www.chess.com/sound/promote.mp3';
+type SoundKind = 'move' | 'capture' | 'check' | 'castle' | 'promotion';
+
+function createAudioContext() {
+  const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  return AudioContextCtor ? new AudioContextCtor() : null;
+}
+
+function playTone(
+  context: AudioContext,
+  frequency: number,
+  duration: number,
+  volume: number,
+  type: OscillatorType = 'sine',
+  startAt = 0
+) {
+  const oscillator = context.createOscillator();
+  const gainNode = context.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, context.currentTime + startAt);
+
+  gainNode.gain.setValueAtTime(0.0001, context.currentTime + startAt);
+  gainNode.gain.exponentialRampToValueAtTime(volume, context.currentTime + startAt + 0.02);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + startAt + duration);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(context.destination);
+
+  oscillator.start(context.currentTime + startAt);
+  oscillator.stop(context.currentTime + startAt + duration + 0.03);
+}
+
+function playSound(context: AudioContext, kind: SoundKind) {
+  switch (kind) {
+    case 'move':
+      playTone(context, 620, 0.08, 0.04, 'triangle');
+      break;
+    case 'capture':
+      playTone(context, 520, 0.07, 0.05, 'triangle');
+      playTone(context, 360, 0.12, 0.035, 'sine', 0.03);
+      break;
+    case 'check':
+      playTone(context, 740, 0.06, 0.05, 'square');
+      playTone(context, 980, 0.08, 0.03, 'square', 0.05);
+      break;
+    case 'castle':
+      playTone(context, 480, 0.06, 0.04, 'triangle');
+      playTone(context, 680, 0.09, 0.04, 'triangle', 0.05);
+      break;
+    case 'promotion':
+      playTone(context, 440, 0.06, 0.04, 'sine');
+      playTone(context, 660, 0.06, 0.04, 'sine', 0.04);
+      playTone(context, 880, 0.08, 0.035, 'sine', 0.08);
+      break;
+  }
+}
 
 export function useChessSound(enabled = true) {
-  const moveAudioRef = useRef<HTMLAudioElement | null>(null);
-  const captureAudioRef = useRef<HTMLAudioElement | null>(null);
-  const checkAudioRef = useRef<HTMLAudioElement | null>(null);
-  const castleAudioRef = useRef<HTMLAudioElement | null>(null);
-  const promoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    // Pre-load audio elements
-    if (typeof window !== 'undefined') {
-      moveAudioRef.current = new Audio(MOVE_SOUND_URL);
-      moveAudioRef.current.preload = 'auto';
-      moveAudioRef.current.volume = 0.4;
-      
-      captureAudioRef.current = new Audio(CAPTURE_SOUND_URL);
-      captureAudioRef.current.preload = 'auto';
-      captureAudioRef.current.volume = 0.4;
-
-      checkAudioRef.current = new Audio(CHECK_SOUND_URL);
-      checkAudioRef.current.preload = 'auto';
-      checkAudioRef.current.volume = 0.4;
-
-      castleAudioRef.current = new Audio(CASTLE_SOUND_URL);
-      castleAudioRef.current.preload = 'auto';
-      castleAudioRef.current.volume = 0.4;
-
-      promoteAudioRef.current = new Audio(PROMOTE_SOUND_URL);
-      promoteAudioRef.current.preload = 'auto';
-      promoteAudioRef.current.volume = 0.4;
-    }
-    
     return () => {
-      moveAudioRef.current = null;
-      captureAudioRef.current = null;
-      checkAudioRef.current = null;
-      castleAudioRef.current = null;
-      promoteAudioRef.current = null;
+      audioContextRef.current?.close().catch(() => {
+        // Ignore shutdown errors.
+      });
+      audioContextRef.current = null;
     };
+  }, []);
+
+  const ensureContext = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = createAudioContext();
+    }
+
+    const context = audioContextRef.current;
+    if (!context) {
+      return null;
+    }
+
+    if (context.state === 'suspended') {
+      void context.resume().catch(() => {
+        // Ignore resume failures.
+      });
+    }
+
+    return context;
   }, []);
 
   const playMoveSound = useCallback((isCapture: boolean = false, isCheck: boolean = false, isCastle: boolean = false, isPromotion: boolean = false) => {
@@ -55,30 +100,26 @@ export function useChessSound(enabled = true) {
     }
 
     try {
-      let audio: HTMLAudioElement | null = null;
-
-      if (isPromotion) {
-        audio = promoteAudioRef.current;
-      } else if (isCastle) {
-        audio = castleAudioRef.current;
-      } else if (isCheck) {
-        audio = checkAudioRef.current;
-      } else if (isCapture) {
-        audio = captureAudioRef.current;
-      } else {
-        audio = moveAudioRef.current;
+      const context = ensureContext();
+      if (!context) {
+        return;
       }
 
-      if (audio) {
-        audio.currentTime = 0;
-        audio.play().catch(() => {
-          // Ignore autoplay errors
-        });
-      }
+      const kind: SoundKind = isPromotion
+        ? 'promotion'
+        : isCastle
+          ? 'castle'
+          : isCheck
+            ? 'check'
+            : isCapture
+              ? 'capture'
+              : 'move';
+
+      playSound(context, kind);
     } catch {
-      // Ignore audio errors
+      // Ignore audio errors so move handling is never blocked.
     }
-  }, [enabled]);
+  }, [enabled, ensureContext]);
 
   return { playMoveSound };
 }

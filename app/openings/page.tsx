@@ -1,32 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import path from 'path';
-import fs from 'fs';
 import { Header } from '@/components/Header';
 import { OpeningPgnBrowser } from '@/components/OpeningPgnBrowser';
 import { openingPages } from '@/lib/seo';
+import pgnFiles from '@/lib/pgn-files.json';
 
 export const metadata: Metadata = {
   title: 'Chess Opening Guides',
   description: 'Opening-specific chess pages for the Sicilian Defense, French Defense, Caro-Kann, King\'s Indian Defense, and Queen\'s Gambit.',
 };
 
-function getPgnFiles() {
-  const pgnDir = path.join(process.cwd(), 'public', 'pgn');
-
-  try {
-    return fs
-      .readdirSync(pgnDir)
-      .filter((fileName) => fileName.toLowerCase().endsWith('.pgn'))
-      .sort((a, b) => a.localeCompare(b));
-  } catch {
-    return [];
-  }
-}
-
 export default function OpeningsPage() {
-  const pgnFiles = getPgnFiles();
-
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
       <Header />

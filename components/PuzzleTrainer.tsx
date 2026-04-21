@@ -315,7 +315,7 @@ export function PuzzleTrainer({ games, sessionKey = 'puzzle' }: { games: Game[];
 
   if (queue.length === 0) {
     return (
-      <Card className="border-gray-800 bg-gray-900 p-6">
+      <Card className="border-gray-800 bg-gray-900 p-4">
         <p className="text-sm text-gray-300">{status}</p>
       </Card>
     );
@@ -323,7 +323,7 @@ export function PuzzleTrainer({ games, sessionKey = 'puzzle' }: { games: Game[];
 
   if (gameComplete && solvedCount >= queue.length && queue.length > 0) {
     return (
-      <Card className="border-gray-800 bg-gray-900 p-6">
+      <Card className="border-gray-800 bg-gray-900 p-4">
         <h2 className="text-xl font-semibold text-white">Puzzle complete</h2>
         <p className="mt-2 text-sm text-gray-400">
           You solved {solvedCount} {solvedCount === 1 ? 'puzzle' : 'puzzles'}.
@@ -333,10 +333,10 @@ export function PuzzleTrainer({ games, sessionKey = 'puzzle' }: { games: Game[];
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-full max-w-[800px] flex items-center justify-between gap-3 rounded-2xl border border-gray-800 bg-gray-900/70 px-4 py-3">
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex w-full max-w-[800px] items-center justify-between gap-3 rounded-2xl border border-gray-800 bg-gray-900/70 px-3.5 py-2.5">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-white">
                 <Target className="h-4 w-4 text-emerald-400" />
@@ -358,7 +358,7 @@ export function PuzzleTrainer({ games, sessionKey = 'puzzle' }: { games: Game[];
             </Button>
           </div>
 
-          <Card className="w-full max-w-[800px] p-4 bg-gray-900 border-gray-800">
+          <Card className="w-full max-w-[800px] border-gray-800 bg-gray-900 p-4">
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2 text-sm text-gray-300">

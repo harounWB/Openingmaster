@@ -44,7 +44,9 @@ export function OpeningPgnBrowser({ fileNames }: OpeningPgnBrowserProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/pgn/${encodeURIComponent(fileName)}`);
+      const response = await fetch(`/pgn/${encodeURIComponent(fileName)}?v=${Date.now()}`, {
+        cache: 'no-store',
+      });
       if (!response.ok) {
         throw new Error(`Failed to load ${fileName}`);
       }
@@ -72,11 +74,11 @@ export function OpeningPgnBrowser({ fileNames }: OpeningPgnBrowserProps) {
   };
 
   return (
-    <section className="mt-12 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-8">
+    <section className="mt-12 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">PGN Library</p>
-          <h2 className="font-display mt-2 text-2xl font-bold tracking-tight text-white">Browse all PGNs in your library</h2>
+          <h2 className="font-display mt-2 text-xl font-bold tracking-tight text-white">Browse all PGNs in your library</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
             Search by opening name, variation, or move sequence. Clicking a file loads it into training automatically.
           </p>
@@ -85,7 +87,7 @@ export function OpeningPgnBrowser({ fileNames }: OpeningPgnBrowserProps) {
         <button
           type="button"
           onClick={() => setShowMore((prev) => !prev)}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060b14]"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060b14]"
         >
           {showMore ? 'Show less' : 'Show more'}
           <ChevronDown className={`h-4 w-4 transition-transform ${showMore ? 'rotate-180' : ''}`} />
@@ -102,7 +104,7 @@ export function OpeningPgnBrowser({ fileNames }: OpeningPgnBrowserProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search your PGNs"
-                className="w-full rounded-[1.15rem] border border-transparent bg-[#08111f] py-3 pl-10 pr-10 text-sm text-white placeholder:text-gray-500 outline-none transition-all duration-200 focus:border-cyan-400/30 focus:bg-[#0a1426] focus:ring-2 focus:ring-cyan-400/20"
+                className="w-full rounded-[1.15rem] border border-transparent bg-[#08111f] py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-gray-500 outline-none transition-all duration-200 focus:border-cyan-400/30 focus:bg-[#0a1426] focus:ring-2 focus:ring-cyan-400/20"
               />
               {searchQuery && (
                 <button
@@ -118,12 +120,12 @@ export function OpeningPgnBrowser({ fileNames }: OpeningPgnBrowserProps) {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center gap-3 py-10 text-sm text-gray-300">
+            <div className="flex items-center justify-center gap-3 py-8 text-sm text-gray-300">
               <Loader2 className="h-4 w-4 animate-spin text-cyan-300" />
               Loading PGN...
             </div>
           ) : filteredFiles.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] py-10 text-center">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] py-8 text-center">
               <p className="text-sm font-medium text-white">No PGNs match your search</p>
               <p className="mt-1 text-xs text-gray-400">Try a different opening, variation, or move sequence.</p>
             </div>
@@ -134,10 +136,10 @@ export function OpeningPgnBrowser({ fileNames }: OpeningPgnBrowserProps) {
                   key={`${fileName}-${index}`}
                   onClick={() => handleSelectPgnFile(fileName)}
                   disabled={isLoading}
-                  className="group w-full rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="group w-full rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-300 transition-colors group-hover:border-cyan-400/20 group-hover:bg-cyan-400/10">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-300 transition-colors group-hover:border-cyan-400/20 group-hover:bg-cyan-400/10">
                       <FileText className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">

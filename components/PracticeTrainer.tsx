@@ -508,10 +508,10 @@ function PracticeTrainerImpl({ game, side }: PracticeTrainerProps) {
     : `${mistakes.length} mistake${mistakes.length === 1 ? '' : 's'} recorded`;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-full max-w-[800px] flex items-center justify-between gap-3 rounded-2xl border border-gray-800 bg-gray-900/70 px-4 py-3">
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex w-full max-w-[800px] items-center justify-between gap-3 rounded-2xl border border-gray-800 bg-gray-900/70 px-3.5 py-2.5">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-white">
                 <Bot className="h-4 w-4 text-emerald-400" />
@@ -522,15 +522,15 @@ function PracticeTrainerImpl({ game, side }: PracticeTrainerProps) {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setBoardOrientation((prev) => (prev === 'white' ? 'black' : 'white'))}
-                className="bg-gray-800 hover:bg-gray-700 text-white"
-              >
-                <FlipHorizontal className="h-4 w-4 mr-2" />
-                Flip
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setBoardOrientation((prev) => (prev === 'white' ? 'black' : 'white'))}
+                  className="bg-gray-800 text-white hover:bg-gray-700"
+                >
+                  <FlipHorizontal className="h-4 w-4 mr-2" />
+                  Flip
+                </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -556,7 +556,7 @@ function PracticeTrainerImpl({ game, side }: PracticeTrainerProps) {
             pieceTheme={settings.pieceTheme}
           />
 
-          <Card className="w-full max-w-[800px] p-4 bg-gray-900 border-gray-800">
+          <Card className="w-full max-w-[800px] border-gray-800 bg-gray-900 p-4">
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2 text-sm text-gray-300">
@@ -587,7 +587,7 @@ function PracticeTrainerImpl({ game, side }: PracticeTrainerProps) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card className="p-4 bg-gray-900 border-gray-800">
+          <Card className="border-gray-800 bg-gray-900 p-4">
             <div className="space-y-3">
               <div>
                 <p className="text-xs uppercase tracking-wider text-gray-500">Practice mode</p>
@@ -606,7 +606,7 @@ function PracticeTrainerImpl({ game, side }: PracticeTrainerProps) {
             </div>
           </Card>
 
-          <Card className="p-4 bg-gray-900 border-gray-800">
+          <Card className="border-gray-800 bg-gray-900 p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-white">Game Controls</h3>

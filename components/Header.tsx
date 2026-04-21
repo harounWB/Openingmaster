@@ -13,29 +13,29 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-950">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-50 border-b border-white/8 bg-slate-950/75 backdrop-blur-xl">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/home" className="flex items-center gap-3 rounded-xl text-white transition-opacity hover:opacity-90">
-              <LogoMark className="h-10 w-10 sm:h-11 sm:w-11" sizes="44px" priority />
+              <LogoMark className="h-8 w-8 sm:h-9 sm:w-9" sizes="36px" priority />
               <div className="leading-tight">
-                <span className="block text-sm font-semibold sm:text-base">OpeningMaster</span>
-                <span className="hidden text-xs text-gray-400 sm:block">Chess opening training</span>
+                <span className="block text-xs font-semibold sm:text-sm">OpeningMaster</span>
+                <span className="hidden text-[11px] text-slate-400 sm:block">Chess opening training</span>
               </div>
             </Link>
             {(user || isGuest) && (
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 px-3 py-1 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 text-xs text-slate-300 transition-colors hover:border-cyan-400/20 hover:bg-white/[0.06] hover:text-white"
               >
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="h-3.5 w-3.5" />
                 Dashboard
               </Link>
             )}
             {isGuest && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-amber-900/20 border border-amber-800/50 rounded-full text-amber-400 text-sm">
-                <Crown className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-200">
+                <Crown className="h-3.5 w-3.5" />
                 Guest Mode
               </div>
             )}
@@ -47,34 +47,34 @@ export function Header() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-gray-700 px-2 text-xs text-gray-300 hover:bg-gray-800 sm:px-3 sm:text-sm"
+                  className="h-8 rounded-full border-white/10 bg-white/[0.03] px-2.5 text-[11px] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white sm:px-3 sm:text-xs"
                 >
-                  <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <Settings className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
                   Settings
                 </Button>
               </Link>
             )}
             {user ? (
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="hidden sm:flex items-center gap-2 text-gray-300">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">{user.email}</span>
+                <div className="hidden items-center gap-2 text-slate-300 sm:flex">
+                  <User className="h-3.5 w-3.5" />
+                  <span className="text-xs">{user.email}</span>
                 </div>
                 <Button
                   onClick={signOut}
                   variant="outline"
                   size="sm"
-                  className="border-gray-700 px-2 text-xs text-gray-300 hover:bg-gray-800 sm:px-3 sm:text-sm"
+                  className="h-8 rounded-full border-white/10 bg-white/[0.03] px-2.5 text-[11px] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white sm:px-3 sm:text-xs"
                 >
-                  <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <LogOut className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
                   <span className="hidden xs:inline">Sign Out</span>
                   <span className="xs:hidden">Out</span>
                 </Button>
               </div>
             ) : (
               <AuthModal>
-                <Button variant="outline" className="border-gray-700 px-2 text-xs text-gray-300 hover:bg-gray-800 sm:px-3 sm:text-sm">
-                  <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <Button variant="outline" className="h-8 rounded-full border-white/10 bg-white/[0.03] px-2.5 text-[11px] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white sm:px-3 sm:text-xs">
+                  <User className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
                   <span className="hidden xs:inline">Sign In</span>
                   <span className="xs:hidden">In</span>
                 </Button>

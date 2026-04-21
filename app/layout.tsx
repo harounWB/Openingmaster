@@ -7,13 +7,14 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeSync } from '@/components/ThemeSync'
 import { SupportButton } from '@/components/SupportButton'
 import { SiteFooter } from '@/components/SiteFooter'
+import { getSiteUrl } from '@/lib/site-url'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://openingmaster.xyz'),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: 'OpeningMaster',
     template: '%s | OpeningMaster',

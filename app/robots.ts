@@ -1,11 +1,14 @@
 import { MetadataRoute } from 'next'
+import { getSiteUrl } from '@/lib/site-url'
 
 export default function robots(): MetadataRoute.Robots {
+  const siteUrl = getSiteUrl()
+
   return {
     rules: {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://openingmaster.xyz/sitemap.xml',
+    sitemap: `${siteUrl}/sitemap.xml`,
   }
 }

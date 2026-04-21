@@ -54,15 +54,15 @@ export function AuthModal({ children }: AuthModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 text-left">
-            <LogoMark className="h-10 w-10" sizes="40px" />
+            <LogoMark className="h-8 w-8" sizes="32px" />
             <div className="space-y-1">
-              <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">OpeningMaster</p>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">OpeningMaster</p>
               <DialogTitle>{isSignUp ? 'Create Account' : 'Sign In'}</DialogTitle>
             </div>
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -89,21 +89,21 @@ export function AuthModal({ children }: AuthModalProps) {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-900/20 border border-red-800/50 rounded-lg text-red-400 text-sm">
+            <div className="flex items-center gap-2 rounded-lg border border-red-800/50 bg-red-900/20 p-2.5 text-sm text-red-400">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 shadow-sm shadow-black/10">
               {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={handleGuestMode}
-              className="flex-1"
+              className="flex-1 border-slate-300 bg-slate-50 text-slate-900 shadow-none hover:bg-slate-100"
             >
               Continue as Guest
             </Button>
@@ -113,7 +113,7 @@ export function AuthModal({ children }: AuthModalProps) {
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-purple-400 hover:text-purple-300"
+              className="text-sm font-medium text-cyan-500 hover:text-cyan-400"
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>

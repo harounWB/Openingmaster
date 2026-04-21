@@ -21,14 +21,14 @@ export function SessionFeedback({
   onReplayMistakes,
   onNewGame,
 }: SessionFeedbackProps) {
-  const accuracy = (session.correctMoves + session.incorrectMoves + session.hintsUsed) > 0 
+  const accuracy = (session.correctMoves + session.incorrectMoves + session.hintsUsed) > 0
     ? Math.round((session.correctMoves / (session.correctMoves + session.incorrectMoves + session.hintsUsed)) * 100)
     : 0;
 
   const mistakeMoves = moveAttempts.filter(a => a.wrongAttempts > 0);
   const hasMistakes = mistakeMoves.length > 0;
 
-  const sessionDuration = session.completedAt 
+  const sessionDuration = session.completedAt
     ? Math.round((session.completedAt - session.startTime) / 1000)
     : 0;
 
@@ -39,103 +39,105 @@ export function SessionFeedback({
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-purple-900/30 to-gray-900/30 border-purple-800/50 backdrop-blur-sm">
-      <div className="space-y-6">
-        {/* Header with trophy */}
-        <div className="text-center space-y-2">
-          <div className="flex justify-center mb-3">
-            <Trophy className="w-10 h-10 text-yellow-400" />
+    <Card className="overflow-hidden border border-slate-800 bg-slate-950/80 p-4 shadow-xl shadow-black/10 sm:p-5">
+      <div className="space-y-5">
+        <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-4 text-center">
+          <div className="flex justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-200">
+              <Trophy className="h-6 w-6" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white">Game Complete!</h2>
-          <p className="text-sm text-gray-400">
-            Difficulty: <span className="capitalize font-semibold text-purple-300">{session.difficulty}</span>
+          <h2 className="mt-3 text-xl font-semibold text-white">
+            Game complete
+          </h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Difficulty: <span className="font-medium capitalize text-slate-200">{session.difficulty}</span>
+          </p>
+          <p className="mt-3 text-sm text-slate-300">
+            You finished the line with {accuracy}% accuracy and {session.correctMoves} clean moves.
           </p>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
-            <div className="text-2xl font-bold text-green-400">{accuracy}%</div>
-            <div className="text-xs text-gray-400 mt-1">Accuracy</div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
+            <div className="text-xl font-semibold text-emerald-200">{accuracy}%</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.2em] text-emerald-100/70">Accuracy</div>
           </div>
-          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
-            <div className="text-2xl font-bold text-blue-400">{session.correctMoves}</div>
-            <div className="text-xs text-gray-400 mt-1">Correct</div>
+          <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3">
+            <div className="text-xl font-semibold text-sky-200">{session.correctMoves}</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.2em] text-sky-100/70">Correct</div>
           </div>
-          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
-            <div className="text-2xl font-bold text-red-400">{session.incorrectMoves}</div>
-            <div className="text-xs text-gray-400 mt-1">Incorrect</div>
+          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3">
+            <div className="text-xl font-semibold text-rose-200">{session.incorrectMoves}</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.2em] text-rose-100/70">Incorrect</div>
           </div>
-          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
-            <div className="text-2xl font-bold text-yellow-400">{session.hintsUsed}</div>
-            <div className="text-xs text-gray-400 mt-1">Hints</div>
-          </div>
-        </div>
-
-        {/* Details */}
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between text-gray-400">
-            <span>Duration:</span>
-            <span className="text-white font-medium">{formatDuration(sessionDuration)}</span>
-          </div>
-          <div className="flex justify-between text-gray-400">
-            <span>Total Moves:</span>
-            <span className="text-white font-medium">{session.totalMoves}</span>
-          </div>
-          <div className="flex justify-between text-gray-400">
-            <span>Correct on First Try:</span>
-            <span className="text-green-400 font-medium">{session.correctMoves}</span>
-          </div>
-          <div className="flex justify-between text-gray-400">
-            <span>Incorrect Moves:</span>
-            <span className="text-red-400 font-medium">{session.incorrectMoves}</span>
-          </div>
-          <div className="flex justify-between text-gray-400">
-            <span>Hints Used:</span>
-            <span className="text-yellow-400 font-medium">{session.hintsUsed}</span>
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
+            <div className="text-xl font-semibold text-amber-200">{session.hintsUsed}</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.2em] text-amber-100/70">Hints</div>
           </div>
         </div>
 
-        {/* Mistake summary */}
+        <div className="grid gap-2 rounded-xl border border-slate-800 bg-slate-900 p-3 text-sm">
+          <div className="flex items-center justify-between text-slate-400">
+            <span>Duration</span>
+            <span className="font-medium text-white">{formatDuration(sessionDuration)}</span>
+          </div>
+          <div className="flex items-center justify-between text-slate-400">
+            <span>Total moves</span>
+            <span className="font-medium text-white">{session.totalMoves}</span>
+          </div>
+          <div className="flex items-center justify-between text-slate-400">
+            <span>Correct on first try</span>
+            <span className="font-medium text-emerald-200">{session.correctMoves}</span>
+          </div>
+          <div className="flex items-center justify-between text-slate-400">
+            <span>Incorrect moves</span>
+            <span className="font-medium text-rose-200">{session.incorrectMoves}</span>
+          </div>
+          <div className="flex items-center justify-between text-slate-400">
+            <span>Hints used</span>
+            <span className="font-medium text-amber-200">{session.hintsUsed}</span>
+          </div>
+        </div>
+
         {hasMistakes && (
-          <div className="p-3 rounded-lg bg-red-900/20 border border-red-800/30">
-            <p className="text-sm text-red-300 font-medium">
+          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
+            <p className="text-sm font-medium text-rose-100">
               {mistakeMoves.length} move{mistakeMoves.length !== 1 ? 's' : ''} had mistakes
             </p>
-            <p className="text-xs text-red-300/70 mt-1">
+            <p className="mt-1 text-xs text-rose-100/70">
               Total wrong attempts: {moveAttempts.reduce((sum, a) => sum + a.wrongAttempts, 0)}
             </p>
           </div>
         )}
 
-        {/* Actions */}
-        <div className="space-y-2 pt-2">
+        <div className="grid gap-2 pt-1 sm:grid-cols-2">
           {hasMistakes && onReplayMistakes && (
             <Button
               onClick={onReplayMistakes}
-              className="w-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center gap-2"
+              className="h-9 w-full bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-400"
             >
-              <RotateCcw className="w-4 h-4" />
-              Replay Mistakes
+              <RotateCcw className="h-4 w-4" />
+              Replay mistakes
             </Button>
           )}
           {onReplay && (
             <Button
               onClick={onReplay}
               variant="outline"
-              className="w-full border-purple-600 text-purple-400 hover:bg-purple-900/20 hover:text-purple-300"
+              className="h-9 w-full border-slate-700 bg-slate-950/80 text-slate-200 shadow-none hover:bg-slate-900 hover:text-white"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Replay Game
+              <RotateCcw className="h-4 w-4" />
+              Replay game
             </Button>
           )}
           {onNewGame && (
             <Button
               onClick={onNewGame}
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white"
+              className="h-9 w-full bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              New Game
+              <CheckCircle className="h-4 w-4" />
+              New game
             </Button>
           )}
         </div>

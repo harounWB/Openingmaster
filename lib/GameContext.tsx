@@ -5,6 +5,7 @@ import { Game, PGNProgress, AppSettings, Collection } from '@/lib/types';
 import { createClient, hasSupabaseEnv } from '@/utils/supabase/client';
 import { useAuth } from '@/lib/AuthContext';
 import { parsePGN } from '@/lib/pgn-parser';
+import bundledPgnFiles from '@/lib/pgn-files.json';
 
 interface GameContextType {
   games: Game[];
@@ -35,6 +36,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 const GAME_ID_SEPARATOR = '::';
+const bundledPgnFileSet = new Set(bundledPgnFiles);
 
 export function scopeGameIdForFile(fileName: string, gameId: string) {
   const prefix = `${fileName}${GAME_ID_SEPARATOR}`;
@@ -111,6 +113,24 @@ function readSavedGamesFromStorage(fileName: string): Game[] {
   }
 }
 
+function getSavedFileSource(fileName: string): 'bundled' | 'upload' | null {
+  if (typeof window === 'undefined') return null;
+
+  const metaRaw = localStorage.getItem(`pgnmeta:${fileName}`);
+  if (!metaRaw) return null;
+
+  try {
+    const parsed = JSON.parse(metaRaw);
+    return parsed?.source === 'bundled' ? 'bundled' : 'upload';
+  } catch {
+    return null;
+  }
+}
+
+function isBundledPgnFile(fileName: string) {
+  return bundledPgnFileSet.has(fileName);
+}
+
 function readSavedFileRecordsFromStorage(): SavedPgnFileRecord[] {
   if (typeof window === 'undefined') return [];
 
@@ -174,7 +194,9 @@ function mergeSavedFileRecords(localRecords: SavedPgnFileRecord[], remoteRecords
 
 async function loadBundledGamesFromPublicFile(fileName: string): Promise<Game[]> {
   try {
-    const response = await fetch(`/pgn/${encodeURIComponent(fileName)}`);
+    const response = await fetch(`/pgn/${encodeURIComponent(fileName)}?v=${Date.now()}`, {
+      cache: 'no-store',
+    });
     if (!response.ok) return [];
 
     const content = await response.text();
@@ -727,6 +749,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Load games from a named file
   const loadGamesFromFile = async (fileName: string) => {
     const localGames = readSavedGamesFromStorage(fileName);
+    const savedSource = fileRecordMap.get(fileName)?.source ?? getSavedFileSource(fileName);
+    const shouldRefreshBundledFile = savedSource === 'bundled' || (!savedSource && isBundledPgnFile(fileName));
+
+    if (shouldRefreshBundledFile) {
+      const bundledGames = await loadBundledGamesFromPublicFile(fileName);
+      if (bundledGames.length > 0) {
+        setGamesState(bundledGames);
+        setSelectedGame(bundledGames[0] || null);
+        setMoveIndex(0);
+        await registerOpenedFile(fileName, bundledGames, 'bundled');
+        safeSetLocalStorageItem('chessGames', JSON.stringify(bundledGames));
+        return bundledGames;
+      }
+    }
+
     if (localGames.length > 0) {
       setGamesState(localGames);
       setSelectedGame(localGames[0] || null);
@@ -766,6 +803,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const loadGamesFromFiles = async (fileNames: string[]) => {
     const combinedGames = (await Promise.all(fileNames.map(async (fileName) => {
+      const savedSource = fileRecordMap.get(fileName)?.source ?? getSavedFileSource(fileName);
+      const shouldRefreshBundledFile = savedSource === 'bundled' || (!savedSource && isBundledPgnFile(fileName));
+
+      if (shouldRefreshBundledFile) {
+        const bundledGames = await loadBundledGamesFromPublicFile(fileName);
+        if (bundledGames.length > 0) {
+          await registerOpenedFile(fileName, bundledGames, 'bundled');
+          return bundledGames;
+        }
+      }
+
       const localGames = readSavedGamesFromStorage(fileName);
       if (localGames.length > 0) {
         if (!fileRecordMap.has(fileName)) {

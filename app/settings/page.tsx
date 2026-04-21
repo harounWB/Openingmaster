@@ -63,29 +63,29 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
       <Header />
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <div className="container mx-auto max-w-6xl px-4 py-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-          <p className="text-gray-400 mt-2">Customize your board style, sound, and collections.</p>
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">Settings</h1>
+          <p className="mt-2 text-sm text-gray-400">Customize your board style, sound, and collections.</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="bg-gray-900 border border-gray-800 rounded-3xl p-6 space-y-4">
+          <section className="space-y-4 rounded-3xl border border-gray-800 bg-gray-900 p-5">
             <div className="flex items-center gap-3 text-white">
-              <Paintbrush className="w-5 h-5 text-blue-400" />
+              <Paintbrush className="h-4 w-4 text-blue-400" />
               <div>
-                <h2 className="text-lg font-semibold">Board & Pieces</h2>
-                <p className="text-sm text-gray-400">Switch board style and chess piece set.</p>
+                <h2 className="text-base font-semibold">Board & Pieces</h2>
+                <p className="text-xs text-gray-400">Switch board style and chess piece set.</p>
               </div>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">Board theme</p>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-gray-500">Board theme</p>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {(Object.keys(boardThemeLabels) as Array<keyof typeof boardThemeLabels>).map((theme) => (
                   <button
                     key={theme}
                     onClick={() => handleBoardThemeChange(theme)}
-                    className={`rounded-2xl border px-4 py-3 text-sm transition ${pendingSettings.boardTheme === theme ? 'border-purple-500 bg-purple-600/20 text-white' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}
+                    className={`rounded-2xl border px-3.5 py-2.5 text-sm transition ${pendingSettings.boardTheme === theme ? 'border-purple-500 bg-purple-600/20 text-white' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}
                   >
                     {boardThemeLabels[theme]}
                   </button>
@@ -94,14 +94,14 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">Piece set</p>
-              <p className="text-sm text-gray-400 mb-3">Chess.com and Lichess piece sets with cleaner scaling and sharper silhouettes.</p>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-gray-500">Piece set</p>
+              <p className="mb-3 text-xs text-gray-400">Chess.com and Lichess piece sets with cleaner scaling and sharper silhouettes.</p>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {(Object.keys(pieceThemeLabels) as Array<keyof typeof pieceThemeLabels>).map((theme) => (
                   <button
                     key={theme}
                     onClick={() => handlePieceThemeChange(theme)}
-                    className={`rounded-2xl border px-4 py-3 text-sm transition ${pendingSettings.pieceTheme === theme ? 'border-purple-500 bg-purple-600/20 text-white' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}
+                    className={`rounded-2xl border px-3.5 py-2.5 text-sm transition ${pendingSettings.pieceTheme === theme ? 'border-purple-500 bg-purple-600/20 text-white' : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600'}`}
                   >
                     {pieceThemeLabels[theme]}
                   </button>
@@ -110,15 +110,15 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section className="bg-gray-900 border border-gray-800 rounded-3xl p-6 space-y-4">
+          <section className="space-y-4 rounded-3xl border border-gray-800 bg-gray-900 p-5">
             <div className="flex items-center gap-3 text-white">
-              <Speaker className="w-5 h-5 text-green-400" />
+              <Speaker className="h-4 w-4 text-green-400" />
               <div>
-                <h2 className="text-lg font-semibold">Sound</h2>
-                <p className="text-sm text-gray-400">Control audio settings.</p>
+                <h2 className="text-base font-semibold">Sound</h2>
+                <p className="text-xs text-gray-400">Control audio settings.</p>
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-2xl border border-gray-700 bg-gray-800 p-4">
+            <div className="flex items-center justify-between rounded-2xl border border-gray-700 bg-gray-800 p-3.5">
               <div>
                 <p className="text-sm font-medium">Sound effects</p>
                 <p className="text-xs text-gray-400">Enable or disable move sound effects.</p>
@@ -128,19 +128,19 @@ export default function SettingsPage() {
                   setPendingSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
                   setSaved(false);
                 }}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${pendingSettings.soundEnabled ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${pendingSettings.soundEnabled ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'}`}
               >
                 {pendingSettings.soundEnabled ? 'On' : 'Off'}
               </button>
             </div>
           </section>
 
-          <section className="bg-gray-900 border border-gray-800 rounded-3xl p-6 space-y-4">
+          <section className="space-y-4 rounded-3xl border border-gray-800 bg-gray-900 p-5">
             <div className="flex items-center gap-3 text-white">
-              <ShieldCheck className="w-5 h-5 text-cyan-400" />
+              <ShieldCheck className="h-4 w-4 text-cyan-400" />
               <div>
-                <h2 className="text-lg font-semibold">Collections</h2>
-                <p className="text-sm text-gray-400">Organize PGN files into custom folders used by the dashboard.</p>
+                <h2 className="text-base font-semibold">Collections</h2>
+                <p className="text-xs text-gray-400">Organize PGN files into custom folders used by the dashboard.</p>
               </div>
             </div>
             <div className="grid gap-3">
@@ -149,7 +149,7 @@ export default function SettingsPage() {
                   value={newCollection}
                   onChange={(e) => setNewCollection(e.target.value)}
                   placeholder="New collection name"
-                  className="flex-1 rounded-2xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-white outline-none"
+                  className="flex-1 rounded-2xl border border-gray-700 bg-gray-900 px-3.5 py-2.5 text-sm text-white outline-none"
                 />
                 <Button
                   onClick={() => {
@@ -158,19 +158,19 @@ export default function SettingsPage() {
                       setNewCollection('');
                     }
                   }}
-                  className="px-4 py-3"
+                  className="px-3.5 py-2.5"
                 >
                   Add
                 </Button>
               </div>
               <div className="space-y-3">
                 {collections.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-gray-700 p-4 text-sm text-gray-400">
+                  <div className="rounded-2xl border border-dashed border-gray-700 p-3.5 text-sm text-gray-400">
                     No collections yet. Create one to group your openings.
                   </div>
                 ) : (
                   collections.map((collection) => (
-                    <div key={collection.id} className="rounded-2xl border border-gray-700 bg-gray-800 p-4">
+                    <div key={collection.id} className="rounded-2xl border border-gray-700 bg-gray-800 p-3.5">
                       <div className="flex items-center justify-between gap-2">
                         {editingCollectionId === collection.id ? (
                           <input
@@ -195,7 +195,7 @@ export default function SettingsPage() {
                                 setEditingCollectionId(null);
                                 setEditingCollectionName('');
                               }}
-                              className="px-3"
+                              className="px-2.5"
                             >
                               Save
                             </Button>
@@ -206,12 +206,12 @@ export default function SettingsPage() {
                                 setEditingCollectionId(collection.id);
                                 setEditingCollectionName(collection.name);
                               }}
-                              className="px-3"
+                              className="px-2.5"
                             >
                               Edit
                             </Button>
                           )}
-                          <Button size="sm" variant="outline" onClick={() => deleteCollection(collection.id)} className="px-3">
+                          <Button size="sm" variant="outline" onClick={() => deleteCollection(collection.id)} className="px-2.5">
                             Delete
                           </Button>
                         </div>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
         <div className="mt-8 flex flex-col items-start gap-3">
           <Button
             onClick={handleSaveSettings}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-3xl"
+            className="rounded-3xl bg-purple-600 px-4 py-2.5 text-white hover:bg-purple-700"
           >
             Save Settings
           </Button>

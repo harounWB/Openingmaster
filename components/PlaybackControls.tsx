@@ -24,37 +24,39 @@ export function PlaybackControls({
   disabled = false,
 }: PlaybackControlsProps) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700">
-      {/* Playback Controls */}
-      <div className="flex gap-2">
+    <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-800 bg-slate-950/80 p-3 shadow-inner shadow-black/10">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           onClick={isPlaying ? onPause : onPlay}
           disabled={disabled}
-          className="w-10 h-10 p-0 bg-purple-600 hover:bg-purple-500"
+          aria-pressed={isPlaying}
+          className="h-9 w-9 rounded-full bg-violet-500 p-0 text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
           title={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
-            <Pause className="w-4 h-4" />
+            <Pause className="h-4 w-4" />
           ) : (
-            <Play className="w-4 h-4" />
+            <Play className="h-4 w-4" />
           )}
         </Button>
-        
+
         <Button
           size="sm"
           onClick={onReset}
           disabled={disabled}
-          className="w-10 h-10 p-0 bg-gray-700 hover:bg-gray-600"
+          variant="outline"
+          className="h-9 w-9 rounded-full border-slate-700 bg-slate-950/80 p-0 text-slate-200 shadow-none hover:bg-slate-900 hover:text-white"
           title="Reset to start"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Speed Control */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400 font-medium min-w-fit">Speed:</span>
+      <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950 px-2.5 py-1">
+        <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+          Speed
+        </span>
         <div className="flex gap-1">
           {[0.5, 1, 2].map((s) => (
             <Button
@@ -62,10 +64,11 @@ export function PlaybackControls({
               size="sm"
               onClick={() => onSpeedChange(s)}
               disabled={disabled}
-              className={`px-2 py-1 text-xs font-medium ${
+              aria-pressed={speed === s}
+              className={`h-7 rounded-full px-2.5 text-[11px] font-medium ${
                 speed === s
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                  ? 'bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/20 hover:bg-cyan-400'
+                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
               {s}x

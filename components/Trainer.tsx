@@ -711,9 +711,9 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
   const hintData = getHintData();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px_280px]">
-        <div className="flex min-w-0 flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px_280px]">
+        <div className="flex min-w-0 flex-col gap-3">
           {sessionComplete && selectedGame && currentSession && (
             <SessionFeedback
               session={currentSession}
@@ -730,7 +730,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
             />
           )}
 
-          <div className="mx-auto flex w-full max-w-[min(100vw,500px)] flex-col items-center gap-3">
+          <div className="mx-auto flex w-full max-w-[min(100vw,500px)] flex-col items-center gap-2.5">
             {selectedGame && gameState ? (
               <ChessBoard
                 fen={trainingMode === 'explore' && exploreFen ? exploreFen : getCurrentFen()}
@@ -750,19 +750,19 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
                 pieceTheme={settings.pieceTheme}
               />
             ) : (
-              <div className="flex aspect-square w-full items-center justify-center rounded-lg border border-gray-700 bg-gray-800">
-                <p className="text-gray-400">Select a game to begin</p>
+              <div className="flex aspect-square w-full items-center justify-center rounded-xl border border-slate-800 bg-slate-950/70">
+                <p className="text-slate-400">Select a game to begin</p>
               </div>
             )}
 
             {selectedGame && (
-              <div className="flex w-full flex-wrap items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900 p-2">
+              <div className="flex w-full flex-wrap items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 p-2.5">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleNavigateMove(0)}
                   disabled={moveIndex === 0}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  className="h-7 w-7 border border-cyan-500/20 bg-slate-950 p-0 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
                   title="First move"
                 >
                   <ChevronsLeft className="h-4 w-4" />
@@ -772,20 +772,20 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
                   size="sm"
                   onClick={() => handleKeyboardNavigation('prev')}
                   disabled={moveIndex === 0}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  className="h-7 w-7 border border-cyan-500/20 bg-slate-950 p-0 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
                   title="Previous move"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-  <span className="text-xs text-gray-400 min-w-[60px] text-center">
-    {trainingMode === 'explore' ? `${moveIndex} / ${selectedGame.moves.length}` : ''}
-  </span>
+                <span className="min-w-[72px] text-center text-[11px] text-slate-400">
+                  {trainingMode === 'explore' ? `${moveIndex} / ${selectedGame.moves.length}` : ''}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleKeyboardNavigation('next')}
                   disabled={trainingMode === 'train' ? moveIndex >= selectedGame.moves.length : moveIndex >= selectedGame.moves.length}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  className="h-7 w-7 border border-cyan-500/20 bg-slate-950 p-0 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
                   title="Next move"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -795,7 +795,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
                   size="sm"
                   onClick={() => handleNavigateMove(selectedGame.moves.length)}
                   disabled={trainingMode === 'train' || moveIndex >= selectedGame.moves.length}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+                  className="h-7 w-7 border border-cyan-500/20 bg-slate-950 p-0 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
                   title="Last move"
                 >
                   <ChevronsRight className="h-4 w-4" />
@@ -803,22 +803,27 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
 
                 {trainingMode === 'train' && moveIndex < selectedGame.moves.length && (
                   <>
-                    <div className="w-px h-6 bg-gray-700 mx-1" />
+                    <div className="mx-1 h-5 w-px bg-slate-700" />
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleHint}
                       disabled={
-                        difficulty === 'easy' ? hintLevel >= 2 :
-                        difficulty === 'medium' ? hintLevel >= 1 :
-                        hintUsedCount >= 1
+                        difficulty === 'easy'
+                          ? hintLevel >= 2
+                          : difficulty === 'medium'
+                            ? hintLevel >= 1
+                            : hintUsedCount >= 1
                       }
-                      className={`text-gray-400 hover:text-amber-400 hover:bg-amber-900/30 h-8 px-3 gap-1.5 ${
-                        hintLevel > 0 ? 'text-amber-400 bg-amber-900/20' : ''
-                      }`}
+                      className={`h-7 gap-1.5 border border-amber-500/20 bg-slate-950 px-2.5 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200 ${
+                        hintLevel > 0 ? 'bg-amber-500/10 text-amber-200' : ''
+                        }`}
                       title={
-                        difficulty === 'hard' && hintUsedCount >= 1 ? 'Hint already used' :
-                        hintLevel === 0 ? 'Get a hint' : 'Hint active'
+                        difficulty === 'hard' && hintUsedCount >= 1
+                          ? 'Hint already used'
+                          : hintLevel === 0
+                            ? 'Get a hint'
+                            : 'Hint active'
                       }
                     >
                       <Lightbulb className="h-4 w-4" />
@@ -842,7 +847,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
             )}
 
             {selectedGame && (
-              <div className="flex w-full flex-wrap items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900 p-2">
+              <div className="flex w-full flex-wrap items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -853,13 +858,13 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
                     }
                   }}
                   disabled={currentGameIndex <= 0}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 px-3 gap-1.5"
+                  className="h-7 gap-1.5 border border-violet-500/20 bg-slate-950 px-2.5 text-violet-300 hover:bg-violet-500/10 hover:text-violet-200"
                   title="Previous game"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span className="text-xs hidden sm:inline">Previous</span>
                 </Button>
-                <span className="text-xs text-gray-400 min-w-[50px] text-center">
+                <span className="min-w-[50px] text-center text-xs text-slate-400">
                   {currentGameIndex + 1} / {games.length}
                 </span>
                 <Button
@@ -872,7 +877,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
                     }
                   }}
                   disabled={currentGameIndex >= games.length - 1}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 px-3 gap-1.5"
+                  className="h-7 gap-1.5 border border-violet-500/20 bg-slate-950 px-2.5 text-violet-300 hover:bg-violet-500/10 hover:text-violet-200"
                   title="Next game"
                 >
                   <span className="text-xs hidden sm:inline">Next</span>
@@ -883,10 +888,10 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
 
             {selectedGame && currentMove?.comment && trainingMode === 'explore' && (
               <div 
-                className="w-full max-w-[400px] rounded-lg p-4 border-l-3"
+                className="w-full max-w-[400px] rounded-xl border border-slate-800 bg-slate-950/80 p-4"
                 style={{
-                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
-                  borderLeft: '3px solid rgba(139, 92, 246, 0.5)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                  borderLeft: '3px solid rgba(71, 85, 105, 0.7)',
                 }}
               >
                 <div className="flex items-start gap-3">
@@ -899,13 +904,10 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-purple-300 mb-1">
+                    <div className="mb-1 text-sm font-semibold text-white">
                       {currentMove.san}
                     </div>
-                    <p 
-                      className="text-sm leading-relaxed"
-                      style={{ color: '#d4c4f5', lineHeight: '1.6' }}
-                    >
+                    <p className="text-sm leading-relaxed text-slate-300" style={{ lineHeight: '1.6' }}>
                       {currentMove.comment}
                     </p>
                   </div>
@@ -938,7 +940,7 @@ export function Trainer({ games, initialMode = 'train' }: TrainerProps) {
 
         {selectedGame && trainingMode === 'explore' && (
           <div className="min-w-0 flex-shrink-0">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Moves & Comments</h3>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Moves & comments</h3>
             <MovesPanel
               game={selectedGame}
               moveIndex={moveIndex}

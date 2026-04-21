@@ -179,47 +179,47 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
       <Header />
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="container mx-auto max-w-7xl px-4 py-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-white">Training Dashboard</h1>
-          <p className="text-gray-400">
+          <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">Training Dashboard</h1>
+          <p className="text-sm text-gray-400">
             {isGuest ? 'Guest Mode - Progress saved locally' : `Welcome back, ${user?.email}`}
           </p>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-5">
             <div className="flex items-center gap-3 mb-2">
-              <Upload className="w-5 h-5 text-blue-400" />
+              <Upload className="h-4 w-4 text-blue-400" />
               <h3 className="text-sm font-medium text-gray-300">Total PGNs</h3>
             </div>
-            <p className="text-2xl font-bold text-white">{savedFiles.length}</p>
+            <p className="text-xl font-bold text-white">{savedFiles.length}</p>
           </div>
 
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-5">
             <div className="flex items-center gap-3 mb-2">
-              <CheckCircle className="w-5 h-5 text-green-400" />
+              <CheckCircle className="h-4 w-4 text-green-400" />
               <h3 className="text-sm font-medium text-gray-300">Completed</h3>
             </div>
-            <p className="text-2xl font-bold text-white">{completedPGNs}</p>
+            <p className="text-xl font-bold text-white">{completedPGNs}</p>
           </div>
 
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-5">
             <div className="flex items-center gap-3 mb-2">
-              <Clock className="w-5 h-5 text-yellow-400" />
+              <Clock className="h-4 w-4 text-yellow-400" />
               <h3 className="text-sm font-medium text-gray-300">In Progress</h3>
             </div>
-            <p className="text-2xl font-bold text-white">{savedFiles.length - completedPGNs}</p>
+            <p className="text-xl font-bold text-white">{savedFiles.length - completedPGNs}</p>
           </div>
 
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-5">
             <div className="flex items-center gap-3 mb-2">
-              <BarChart3 className="w-5 h-5 text-purple-400" />
+              <BarChart3 className="h-4 w-4 text-purple-400" />
               <h3 className="text-sm font-medium text-gray-300">Overall Progress</h3>
             </div>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-xl font-bold text-white">
               {totalPossible > 0 ? Math.round((totalProgress / totalPossible) * 100) : 0}%
             </p>
           </div>
@@ -227,9 +227,9 @@ export default function DashboardPage() {
 
         {/* Folders */}
         <div className="mb-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-white">Folders</h2>
+              <h2 className="text-lg font-semibold text-white">Folders</h2>
               <p className="text-sm text-gray-400">Collections from Settings appear here as dashboard folders.</p>
             </div>
             <p className="text-sm text-gray-500">
@@ -390,15 +390,15 @@ export default function DashboardPage() {
           </div>
 
           {savedFiles.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Upload className="w-8 h-8 text-gray-400" />
+            <div className="py-10 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-800">
+                <Upload className="h-7 w-7 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-300 mb-2">No PGN files uploaded yet</h3>
-              <p className="text-gray-400 mb-4">Upload a PGN file to start training your openings</p>
+              <h3 className="mb-2 text-base font-medium text-gray-300">No PGN files uploaded yet</h3>
+              <p className="mb-4 text-gray-400">Upload a PGN file to start training your openings</p>
               <button
                 onClick={() => router.push('/upload')}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                className="rounded-lg bg-purple-600 px-4 py-2 text-sm text-white transition-colors hover:bg-purple-700"
               >
                 Upload PGN File
               </button>
@@ -416,13 +416,13 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={pgnStat.fileName}
-                    className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:bg-gray-800/70 transition-colors"
+                    className="rounded-lg border border-gray-700 bg-gray-800/50 p-5 transition-colors hover:bg-gray-800/70"
                   >
                     {/* PGN Name Header */}
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-white truncate">
+                        <h3 className="truncate text-base font-semibold text-white">
                             {pgnStat.fileName.replace('.pgn', '')}
                           </h3>
                           {pgnStat.isDone && (
@@ -442,7 +442,7 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <label className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-900/60 px-3 py-2 text-sm text-gray-200 cursor-pointer select-none">
+                        <label className="inline-flex cursor-pointer select-none items-center gap-2 rounded-lg border border-gray-700 bg-gray-900/60 px-2.5 py-1.5 text-xs text-gray-200">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                         </label>
                         <button
                           onClick={() => handleDeleteFiles([pgnStat.fileName])}
-                          className="inline-flex items-center gap-2 rounded-lg border border-red-900/60 bg-red-950/50 px-3 py-2 text-sm text-red-200 transition-colors hover:bg-red-900/60 hover:text-white"
+                          className="inline-flex items-center gap-2 rounded-lg border border-red-900/60 bg-red-950/50 px-2.5 py-1.5 text-xs text-red-200 transition-colors hover:bg-red-900/60 hover:text-white"
                         >
                           <Trash2 className="h-4 w-4" />
                           Delete Game
@@ -462,18 +462,18 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Progress Stats */}
-                    <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
-                      <div className="bg-gray-900/50 rounded p-3">
+                    <div className="mb-4 grid grid-cols-3 gap-3 text-sm">
+                      <div className="rounded bg-gray-900/50 p-2.5">
                         <p className="text-gray-400 text-xs">Explored</p>
-                        <p className="text-white font-bold text-lg">{pgnStat.explored}/{pgnStat.total}</p>
+                        <p className="text-base font-bold text-white">{pgnStat.explored}/{pgnStat.total}</p>
                       </div>
-                      <div className="bg-gray-900/50 rounded p-3">
+                      <div className="rounded bg-gray-900/50 p-2.5">
                         <p className="text-gray-400 text-xs">Trained</p>
-                        <p className="text-white font-bold text-lg">{pgnStat.trained}/{pgnStat.total}</p>
+                        <p className="text-base font-bold text-white">{pgnStat.trained}/{pgnStat.total}</p>
                       </div>
-                      <div className="bg-gray-900/50 rounded p-3">
+                      <div className="rounded bg-gray-900/50 p-2.5">
                         <p className="text-gray-400 text-xs">Progress</p>
-                        <p className="text-white font-bold text-lg">{progressPercent}%</p>
+                        <p className="text-base font-bold text-white">{progressPercent}%</p>
                       </div>
                     </div>
 
@@ -499,13 +499,13 @@ export default function DashboardPage() {
                           router.push(`/training?game=${encodeURIComponent(selectedGame.id)}`);
                         }
                       }}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
+                      className="flex w-full items-center justify-between rounded-lg bg-purple-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-purple-700"
                     >
                       <span className="flex items-center gap-2">
-                        <Play className="w-4 h-4" />
+                        <Play className="h-4 w-4" />
                         {pgnStat.isDone ? 'Review Chapters' : 'Continue Training'}
                       </span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="h-4 w-4" />
                     </button>
 
                     {/* Chapter List */}
@@ -519,7 +519,7 @@ export default function DashboardPage() {
                             return (
                               <div
                                 key={game.id}
-                                className="flex items-center gap-2 text-xs p-2 bg-gray-900/50 rounded"
+                                className="flex items-center gap-2 rounded bg-gray-900/50 p-2 text-xs"
                               >
                                 <div className="flex gap-1">
                                   {isExplored && (
@@ -549,18 +549,18 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => router.push('/upload')}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium border border-gray-700"
-            >
-              <Upload className="w-5 h-5" />
+            className="flex items-center justify-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-4 py-2.5 font-medium text-white transition-colors hover:bg-gray-700"
+          >
+              <Upload className="h-4 w-4" />
               Upload New PGN
             </button>
 
             <button
               onClick={handleStartTraining}
               disabled={selectedCount === 0}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Play className="w-5 h-5" />
+            className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+              <Play className="h-4 w-4" />
               Start Training
             </button>
           </div>

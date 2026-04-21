@@ -817,11 +817,11 @@ export default function UploadPage() {
             </p>
           </div>
         )}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Header */}
           <header className="flex items-center justify-center">
-            <div className="flex items-center gap-4">
-              <LogoMark className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" priority />
+            <div className="flex items-center gap-3">
+              <LogoMark className="h-12 w-12 sm:h-14 sm:w-14" sizes="56px" priority />
               <div>
                 <h1 className="text-2xl font-bold text-white sm:text-3xl">Analyze Chess Games Online</h1>
                 <p className="text-sm text-gray-500">Free PGN Analyzer and chess opening trainer</p>
@@ -831,7 +831,7 @@ export default function UploadPage() {
 
           {/* Resume or Upload Decision */}
           {games.length > 0 && (
-            <div className="max-w-md mx-auto bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+            <div className="mx-auto max-w-md space-y-4 rounded-lg border border-gray-800 bg-gray-900 p-5">
               <div className="space-y-2">
                 <h2 className="text-lg font-semibold text-white">You have an existing game</h2>
                 <p className="text-sm text-gray-400">
@@ -860,7 +860,7 @@ export default function UploadPage() {
           )}
 
           {/* Upload Form */}
-          <div className="max-w-md mx-auto pt-12">
+          <div className="mx-auto max-w-md pt-10">
             <PGNUpload onGamesLoaded={handleGamesLoaded} isLoading={isLoading} />
           </div>
 
@@ -869,7 +869,7 @@ export default function UploadPage() {
               type="button"
               onClick={() => setShowSelectGames((prev) => !prev)}
               disabled={isLoading}
-              className="flex w-full items-center justify-center rounded-xl bg-purple-600 px-4 py-3 font-medium text-white shadow-lg shadow-purple-500/20 transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center rounded-xl bg-purple-600 px-4 py-2.5 font-medium text-white shadow-lg shadow-purple-500/20 transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FileText className="mr-2 h-4 w-4" />
               Select Games
@@ -879,10 +879,10 @@ export default function UploadPage() {
 
           {/* Select Games Section */}
           {showSelectGames && (
-            <div className="max-w-md mx-auto pt-4">
-              <Card className="p-4 bg-gray-900/80 border-gray-800 backdrop-blur-sm">
+            <div className="mx-auto max-w-md pt-4">
+              <Card className="border-gray-800 bg-gray-900/80 p-4 backdrop-blur-sm">
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-white text-center">Choose a PGN File</h3>
+                  <h3 className="text-center text-base font-semibold text-white">Choose a PGN File</h3>
 
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
@@ -891,7 +891,7 @@ export default function UploadPage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search by opening name, variation, or move"
-                      className="w-full rounded-lg border border-gray-700 bg-gray-950/80 py-3 pl-10 pr-10 text-sm text-white placeholder:text-gray-500 outline-none transition-colors focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-950/80 py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-gray-500 outline-none transition-colors focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                     />
                     {searchQuery && (
                       <button
